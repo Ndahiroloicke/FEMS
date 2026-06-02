@@ -1,0 +1,60 @@
+%% Fire Extinguisher Management System (FEMS) — System Architecture
+%% Paste into https://mermaid.live or any Mermaid renderer
+
+flowchart TB
+  subgraph users["Users"]
+    staff["Company staff<br/>(operations / admin)"]
+  end
+
+  subgraph client["Frontend — Next.js"]
+    web["Web app<br/>React · TypeScript · Tailwind<br/>:3000"]
+    pages["Pages<br/>Dashboard · Customers · Extinguishers<br/>Notifications · Escalations"]
+    web --> pages
+  end
+
+  subgraph api["Backend — NestJS API"]
+    rest["REST API + Swagger<br/>/api · :3001"]
+    mod_cust["Customers module"]
+    mod_ext["Fire Extinguishers module"]
+    mod_notif["Notifications module"]
+    mod_esc["Escalations module"]
+    mod_comp["Compliance module"]
+    mod_dash["Dashboard module"]
+    cron["Scheduled job<br/>Daily 8:00 AM"]
+    rest --> mod_cust
+    rest --> mod_ext
+    rest --> mod_notif
+    rest --> mod_esc
+    rest --> mod_comp
+    rest --> mod_dash
+    cron --> mod_comp
+  end
+
+  subgraph data["Data layer"]
+    prisma["Prisma ORM"]
+    pg[("PostgreSQL<br/>customers · fire_extinguishers<br/>notifications · escalations")]
+    prisma --> pg
+  end
+
+  subgraph future["Future integrations — not built yet"]
+    sms["SMS / Email provider"]
+    police["Police reporting API"]
+  end
+
+  staff -->|"HTTPS"| web
+  pages -->|"REST JSON<br/>NEXT_PUBLIC_API_URL"| rest
+  mod_cust --> prisma
+  mod_ext --> prisma
+  mod_notif --> prisma
+  mod_esc --> prisma
+  mod_comp --> prisma
+  mod_dash --> prisma
+  mod_comp -.->|"planned"| sms
+  mod_esc -.->|"planned"| police
+
+  %% Business flows
+  staff -.->|"1. Register customer & sale"| pages
+  staff -.->|"2. Mark DELIVERED / RETURNED"| pages
+  cron -.->|"3. Expiry warnings"| mod_notif
+  cron -.->|"4. Create escalation if not returned"| mod_esc
+  staff -.->|"5. Report to police (internal record)"| pages

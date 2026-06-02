@@ -6,7 +6,8 @@ Full-stack system for tracking fire extinguisher sales, expiry dates, customer n
 
 | Layer    | Technology                          |
 | -------- | ----------------------------------- |
-| Frontend | Next.js, TypeScript, Tailwind CSS   |
+| Web      | Next.js, TypeScript, Tailwind CSS   |
+| Mobile   | Expo (React Native), TypeScript     |
 | Backend  | NestJS (modular monolith), Swagger  |
 | Database | PostgreSQL                          |
 | ORM      | Prisma                              |
@@ -74,6 +75,27 @@ npm run dev
 - App: http://localhost:3000
 
 Set `NEXT_PUBLIC_API_URL=http://localhost:3001/api` in `frontend/.env.local` if needed.
+
+## Mobile app
+
+```bash
+cd mobile
+npm install
+cp .env.example .env
+npm start
+```
+
+Uses the **same NestJS backend** as the web app. Set `EXPO_PUBLIC_API_URL` in `mobile/.env`:
+
+| Environment        | API URL                              |
+| ------------------ | ------------------------------------ |
+| iOS simulator      | `http://localhost:3001/api`          |
+| Android emulator   | `http://10.0.2.2:3001/api`           |
+| Physical device    | `http://YOUR_PC_LAN_IP:3001/api`     |
+
+Then press `i` (iOS) or `a` (Android) in the Expo terminal, or scan the QR code with Expo Go.
+
+**Mobile screens (same as web):** Dashboard, Customers, Extinguishers, Notifications, Escalations — including register customer/sale, mark delivered/returned, run compliance checks, and report to police modal.
 
 ## Core workflow
 
