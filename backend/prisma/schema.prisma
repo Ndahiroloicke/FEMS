@@ -1,0 +1,98 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ExtinguisherStatus {
+  ACTIVE
+  DELIVERED
+  RETURNED
+  EXPIRED
+}
+
+enum NotificationType {
+  EXPIRY_WARNING
+  POLICE_ESCALATION
+}
+
+enum NotificationChannel {
+  EMAIL
+  SMS
+  SYSTEM
+}
+
+enum EscalationStatus {
+  PENDING
+  REPORTED
+  RESOLVED
+}
+
+model Customer {
+  id            String             @id @default(uuid())
+  fullName      String
+  nationalId    String             @unique
+  email         String?
+  phone         String
+  address       String?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  extinguishers FireExtinguisher[]
+  notifications Notification[]
+  escalations   Escalation[]
+
+  @@map("customers")
+}
+
+model FireExtinguisher {
+  id            String             @id @default(uuid())
+  serialNumber  String             @unique
+  type          String?
+  capacity      String?
+  purchaseDate  DateTime
+  expiryDate    DateTime
+  status        ExtinguisherStatus @default(ACTIVE)
+  customerId    String
+  customer      Customer           @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  notifications Notification[]
+  escalations   Escalation[]
+
+  @@map("fire_extinguishers")
+}
+
+model Notification {
+  id             String              @id @default(uuid())
+  type           NotificationType
+  channel        NotificationChannel @default(SYSTEM)
+  message        String
+  sentAt         DateTime            @default(now())
+  customerId     String
+  customer       Customer            @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  extinguisherId String
+  extinguisher   FireExtinguisher    @relation(fields: [extinguisherId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model Escalation {
+  id             String           @id @default(uuid())
+  reason         String
+  status         EscalationStatus @default(PENDING)
+  reportedAt     DateTime?
+  resolvedAt     DateTime?
+  notes          String?
+  customerId     String
+  customer       Customer         @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  extinguisherId String
+  extinguisher   FireExtinguisher @relation(fields: [extinguisherId], references: [id], onDelete: Cascade)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@map("escalations")
+}
