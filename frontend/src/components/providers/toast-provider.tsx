@@ -35,9 +35,9 @@ const icons = {
 };
 
 const styles: Record<ToastType, string> = {
-  success: "border-green-200 bg-green-50 text-green-800",
-  error: "border-red-200 bg-red-50 text-red-800",
-  info: "border-slate-200 bg-white text-slate-800",
+  success: "border-blue-200 bg-blue-50 text-blue-900",
+  error: "border-red-200 bg-red-50 text-red-900",
+  info: "border-blue-200 bg-blue-50 text-blue-800",
 };
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {

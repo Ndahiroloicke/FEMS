@@ -176,7 +176,7 @@ export function Alert({
       className={cn(
         "mb-4 rounded-md border px-4 py-3 text-sm",
         type === "error" && "border-red-200 bg-red-50 text-red-800",
-        type === "success" && "border-green-200 bg-green-50 text-green-800",
+        type === "success" && "border-blue-200 bg-blue-50 text-blue-900",
         type === "info" && "border-blue-200 bg-blue-50 text-blue-800",
       )}
     >
