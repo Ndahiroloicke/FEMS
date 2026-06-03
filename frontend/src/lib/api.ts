@@ -53,6 +53,32 @@ export function clearAuth() {
 /* Core request helper                                                 */
 /* ------------------------------------------------------------------ */
 
+const PUBLIC_AUTH_PATHS = [
+  "/auth/login",
+  "/auth/register",
+  "/auth/forgot-password",
+  "/auth/reset-password",
+] as const;
+
+function isPublicAuthPath(path: string): boolean {
+  const base = path.split("?")[0];
+  return PUBLIC_AUTH_PATHS.includes(base as (typeof PUBLIC_AUTH_PATHS)[number]);
+}
+
+function parseErrorBody(text: string, fallback: string): string {
+  if (!text.trim()) return fallback;
+  try {
+    const parsed = JSON.parse(text) as {
+      message?: string | string[];
+      error?: string;
+    };
+    const raw = parsed.message ?? parsed.error ?? fallback;
+    return Array.isArray(raw) ? raw.join(", ") : String(raw);
+  } catch {
+    return text.slice(0, 200) || fallback;
+  }
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const method = options?.method ?? "GET";
   const hasBody = options?.body !== undefined && options?.body !== null;
@@ -81,7 +107,13 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     cache: "no-store",
   });
 
+  const text = await response.text();
+
   if (response.status === 401) {
+    const serverMessage = parseErrorBody(text, "Unauthorized");
+    if (isPublicAuthPath(path)) {
+      throw new ApiError(serverMessage, 401);
+    }
     clearAuth();
     if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
       window.location.href = "/login";
@@ -89,22 +121,8 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     throw new ApiError("Your session has expired. Please sign in again.", 401);
   }
 
-  const text = await response.text();
-
   if (!response.ok) {
-    let message = `Request failed (${response.status})`;
-    try {
-      if (text) {
-        const parsed = JSON.parse(text) as {
-          message?: string | string[];
-          error?: string;
-        };
-        const raw = parsed.message ?? parsed.error ?? message;
-        message = Array.isArray(raw) ? raw.join(", ") : String(raw);
-      }
-    } catch {
-      if (text) message = text.slice(0, 200);
-    }
+    const message = parseErrorBody(text, `Request failed (${response.status})`);
     throw new ApiError(message, response.status);
   }
 
@@ -141,7 +159,9 @@ export async function downloadFile(path: string, fallbackName = "report"): Promi
   if (response.status === 401) {
     clearAuth();
     if (typeof window !== "undefined") window.location.href = "/login";
-    throw new ApiError("Your session has expired. Please sign in again.", 401);
+    const text = await response.text();
+    const serverMessage = parseErrorBody(text, "Your session has expired. Please sign in again.");
+    throw new ApiError(serverMessage, 401);
   }
 
   if (!response.ok) {

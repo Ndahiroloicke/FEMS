@@ -1,0 +1,35 @@
+%% FEMS — Logical service decomposition (for documentation / presentations)
+%% Physical deployment: ONE NestJS process on :3001 (modular monolith).
+%% Logical view: domain modules map 1:1 to SRS "microservice" responsibilities.
+%% Paste into https://mermaid.live
+
+flowchart LR
+  subgraph clients["Clients"]
+    web["Next.js Web App :3000"]
+  end
+
+  subgraph gateway["REST API Layer (single deployable)"]
+    api["NestJS REST API Gateway<br/>Base URL: /api<br/>OpenAPI: /api/docs<br/>JWT + RBAC on every route"]
+  end
+
+  subgraph services["Logical domain services (NestJS modules)"]
+    direction TB
+    s_auth["① User & Auth Service<br/>auth/ · users/<br/>Register, login, JWT, profile,<br/>password reset, admin user mgmt"]
+    s_ext["② Extinguisher Service<br/>extinguishers/<br/>CRUD, assign owner (ownerId),<br/>USER-scoped list"]
+    s_insp["③ Inspection Service<br/>inspections/<br/>Schedule / request (PENDING),<br/>approve, status tracking"]
+    s_maint["④ Maintenance Service<br/>maintenance/<br/>Log actions & conditions,<br/>USER-scoped history"]
+    s_rep["⑤ Reporting Service<br/>reports/<br/>Summary, stock charts, expired list,<br/>CSV/PDF export (scoped)"]
+    s_notif["⑥ Notification Service<br/>notifications/ + mailer/<br/>In-app alerts + SMTP email"]
+    s_jobs["⑦ Scheduler Service<br/>tasks/<br/>Daily expiry & overdue jobs"]
+  end
+
+  subgraph shared["Shared infrastructure"]
+    db[("PostgreSQL<br/>Single database")]
+    smtp["SMTP"]
+  end
+
+  web -->|"HTTPS JSON + Bearer JWT"| api
+  api --> s_auth & s_ext & s_insp & s_maint & s_rep & s_notif & s_jobs
+  s_auth & s_ext & s_insp & s_maint & s_rep & s_notif --> db
+  s_notif --> smtp
+  s_jobs --> s_ext & s_notif

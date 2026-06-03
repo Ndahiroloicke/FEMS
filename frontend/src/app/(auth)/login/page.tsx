@@ -44,8 +44,11 @@ export default function LoginPage() {
       toast.success(`Welcome back, ${user.firstName}!`);
       router.replace("/");
     } catch (err) {
-      const message =
+      let message =
         err instanceof ApiError ? err.message : "Unable to sign in. Please try again.";
+      if (message === "Invalid email or password") {
+        message = "Wrong email or password. Please check your credentials and try again.";
+      }
       setError(message);
     } finally {
       setSubmitting(false);
