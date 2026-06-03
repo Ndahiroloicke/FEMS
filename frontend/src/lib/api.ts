@@ -217,6 +217,8 @@ export interface FireExtinguisher {
   installationDate: string;
   expiryDate: string;
   status: ExtinguisherStatus;
+  ownerId?: string | null;
+  owner?: Pick<User, "id" | "firstName" | "lastName" | "email"> | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -445,6 +447,11 @@ export const api = {
         method: "PATCH",
         body: JSON.stringify(data),
       }),
+    assign: (id: string, data: { ownerId: string | null }) =>
+      request<FireExtinguisher>(`/extinguishers/${id}/assign`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      }),
     delete: (id: string) => request<void>(`/extinguishers/${id}`, { method: "DELETE" }),
   },
 
@@ -487,6 +494,8 @@ export const api = {
       page?: number;
       limit?: number;
     }) => request<Page<MaintenanceLog>>(`/reports/maintenance-history${buildQuery(params)}`),
+    export: (params: { report: "extinguishers" | "inspections" | "maintenance" | "expired"; format: "csv" | "pdf" }) =>
+      downloadFile(`/reports/export${buildQuery(params)}`, `${params.report}-report.${params.format}`),
   },
 
   notifications: {

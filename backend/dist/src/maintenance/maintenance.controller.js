@@ -29,8 +29,8 @@ let MaintenanceController = class MaintenanceController {
     create(dto, userId) {
         return this.maintenanceService.create(dto, userId);
     }
-    findAll(query) {
-        return this.maintenanceService.findAll(query);
+    findAll(query, user) {
+        return this.maintenanceService.findAll(query, user);
     }
     findOne(id) {
         return this.maintenanceService.findOne(id);
@@ -49,10 +49,11 @@ __decorate([
 ], MaintenanceController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
-    (0, swagger_1.ApiOperation)({ summary: 'List maintenance logs (paginated)' }),
+    (0, swagger_1.ApiOperation)({ summary: 'List maintenance logs (paginated); USER role only sees their own' }),
     __param(0, (0, common_1.Query)()),
+    __param(1, (0, current_user_decorator_js_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [query_maintenance_dto_js_1.QueryMaintenanceDto]),
+    __metadata("design:paramtypes", [query_maintenance_dto_js_1.QueryMaintenanceDto, Object]),
     __metadata("design:returntype", void 0)
 ], MaintenanceController.prototype, "findAll", null);
 __decorate([

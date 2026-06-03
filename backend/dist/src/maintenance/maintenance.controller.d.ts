@@ -1,3 +1,4 @@
+import type { AuthUser } from '../common/decorators/current-user.decorator.js';
 import { CreateMaintenanceDto } from './dto/create-maintenance.dto.js';
 import { QueryMaintenanceDto } from './dto/query-maintenance.dto.js';
 import { MaintenanceService } from './maintenance.service.js';
@@ -25,18 +26,8 @@ export declare class MaintenanceController {
         conditionNoted: import("../common/prisma-enums.js").MaintenanceCondition;
         actionDate: Date;
     }>;
-    findAll(query: QueryMaintenanceDto): Promise<import("../common/dto/pagination.dto.js").PaginatedResult<unknown>>;
+    findAll(query: QueryMaintenanceDto, user: AuthUser): Promise<import("../common/dto/pagination.dto.js").PaginatedResult<unknown>>;
     findOne(id: string): Promise<{
-        extinguisher: {
-            id: string;
-            serialNumber: string;
-            location: string;
-        };
-        inspector: {
-            id: string;
-            firstName: string;
-            lastName: string;
-        };
         inspection: {
             id: string;
             createdAt: Date;
@@ -50,6 +41,16 @@ export declare class MaintenanceController {
             result: string | null;
             completedAt: Date | null;
         } | null;
+        extinguisher: {
+            id: string;
+            serialNumber: string;
+            location: string;
+        };
+        inspector: {
+            id: string;
+            firstName: string;
+            lastName: string;
+        };
     } & {
         id: string;
         createdAt: Date;

@@ -150,6 +150,31 @@ let ExtinguishersService = class ExtinguishersService {
             },
         });
     }
+    async assign(id, dto) {
+        const current = await this.prisma.fireExtinguisher.findUnique({
+            where: { id },
+        });
+        if (!current) {
+            throw new common_1.NotFoundException(`Extinguisher ${id} not found`);
+        }
+        if (dto.ownerId) {
+            const owner = await this.prisma.user.findUnique({
+                where: { id: dto.ownerId },
+            });
+            if (!owner) {
+                throw new common_1.NotFoundException(`User ${dto.ownerId} not found`);
+            }
+        }
+        return this.prisma.fireExtinguisher.update({
+            where: { id },
+            data: { ownerId: dto.ownerId ?? null },
+            include: {
+                owner: {
+                    select: { id: true, firstName: true, lastName: true, email: true },
+                },
+            },
+        });
+    }
     async remove(id) {
         const current = await this.prisma.fireExtinguisher.findUnique({
             where: { id },

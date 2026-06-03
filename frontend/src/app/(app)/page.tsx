@@ -10,10 +10,11 @@ import {
   CalendarDays,
 } from "lucide-react";
 import {
-  BarChart,
-  Bar,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
+  CartesianGrid,
   Tooltip,
   ResponsiveContainer,
   PieChart,
@@ -23,6 +24,7 @@ import {
 } from "recharts";
 import { PageHeader, Card, ErrorState } from "@/components/ui/primitives";
 import { StatCard } from "@/components/ui/status-badge";
+import { useAuth } from "@/components/providers/auth-provider";
 import {
   api,
   type ReportSummary,
@@ -68,6 +70,9 @@ const quickLinks = [
 ];
 
 export default function DashboardPage() {
+  const { role } = useAuth();
+  const isUser = role === "USER";
+
   const [summary, setSummary] = useState<ReportSummary | null>(null);
   const [stockData, setStockData] = useState<StockReportPoint[]>([]);
   const [inspectionStatus, setInspectionStatus] = useState<InspectionStatusReport | null>(null);
@@ -112,8 +117,12 @@ export default function DashboardPage() {
   return (
     <>
       <PageHeader
-        title="Dashboard"
-        description="Overview of your fire extinguisher fleet and compliance status"
+        title={isUser ? "My Extinguishers Overview" : "Dashboard"}
+        description={
+          isUser
+            ? "Showing data for your assigned extinguishers only"
+            : "Overview of your fire extinguisher fleet and compliance status"
+        }
       />
 
       {error ? (
@@ -189,28 +198,32 @@ export default function DashboardPage() {
                 {stockData.length > 0 ? (
                   <div className="px-4 py-5">
                     <ResponsiveContainer width="100%" height={200}>
-                      <BarChart data={stockData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                      <LineChart data={stockData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                         <XAxis
                           dataKey="period"
-                          tick={{ fontSize: 11, fill: "#94a3b8" }}
-                          axisLine={false}
-                          tickLine={false}
+                          tick={{ fontSize: 11, fill: "#64748b" }}
                         />
                         <YAxis
-                          tick={{ fontSize: 11, fill: "#94a3b8" }}
-                          axisLine={false}
-                          tickLine={false}
+                          tick={{ fontSize: 11, fill: "#64748b" }}
                           allowDecimals={false}
                         />
                         <Tooltip
                           contentStyle={{
                             fontSize: 12,
-                            borderColor: "#e2e8f0",
-                            borderRadius: 6,
+                            borderRadius: 8,
+                            border: "1px solid #e2e8f0",
                           }}
                         />
-                        <Bar dataKey="count" fill="#0f172a" radius={[3, 3, 0, 0]} />
-                      </BarChart>
+                        <Line
+                          type="monotone"
+                          dataKey="count"
+                          stroke="#0f172a"
+                          strokeWidth={2}
+                          dot={{ r: 4, fill: "#0f172a" }}
+                          activeDot={{ r: 6 }}
+                        />
+                      </LineChart>
                     </ResponsiveContainer>
                   </div>
                 ) : (

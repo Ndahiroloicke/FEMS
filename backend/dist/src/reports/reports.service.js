@@ -31,29 +31,35 @@ let ReportsService = class ReportsService {
         const d = new Date();
         return new Date(d.getFullYear(), 0, 1);
     }
-    async getSummary() {
+    async getSummary(userId) {
         const now = new Date();
+        const ownerFilter = userId ? { ownerId: userId } : {};
         const [totalExtinguishers, statusGroups, typeGroups, registeredToday, registeredThisMonth, registeredThisYear, activeInspections, expiredCount,] = await Promise.all([
-            this.prisma.fireExtinguisher.count(),
+            this.prisma.fireExtinguisher.count({ where: ownerFilter }),
             this.prisma.fireExtinguisher.groupBy({
                 by: ['status'],
                 _count: { _all: true },
+                where: ownerFilter,
             }),
             this.prisma.fireExtinguisher.groupBy({
                 by: ['type'],
                 _count: { _all: true },
+                where: ownerFilter,
             }),
             this.prisma.fireExtinguisher.count({
-                where: { createdAt: { gte: this.startOfToday() } },
+                where: { ...ownerFilter, createdAt: { gte: this.startOfToday() } },
             }),
             this.prisma.fireExtinguisher.count({
-                where: { createdAt: { gte: this.startOfMonth() } },
+                where: { ...ownerFilter, createdAt: { gte: this.startOfMonth() } },
             }),
             this.prisma.fireExtinguisher.count({
-                where: { createdAt: { gte: this.startOfYear() } },
+                where: { ...ownerFilter, createdAt: { gte: this.startOfYear() } },
             }),
             this.prisma.inspection.count({
                 where: {
+                    ...(userId
+                        ? { extinguisher: { ownerId: userId } }
+                        : {}),
                     status: {
                         in: [
                             prisma_enums_js_1.InspectionStatus.SCHEDULED,
@@ -65,6 +71,7 @@ let ReportsService = class ReportsService {
             }),
             this.prisma.fireExtinguisher.count({
                 where: {
+                    ...ownerFilter,
                     OR: [
                         { status: prisma_enums_js_1.ExtinguisherStatus.EXPIRED },
                         { expiryDate: { lt: now } },
@@ -97,9 +104,11 @@ let ReportsService = class ReportsService {
             expiredCount,
         };
     }
-    async getStock(period) {
+    async getStock(period, userId) {
+        const ownerFilter = userId ? { ownerId: userId } : {};
         const extinguishers = await this.prisma.fireExtinguisher.findMany({
             select: { createdAt: true },
+            where: ownerFilter,
             orderBy: { createdAt: 'asc' },
         });
         const buckets = new Map();

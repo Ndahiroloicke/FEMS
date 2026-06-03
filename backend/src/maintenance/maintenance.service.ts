@@ -4,7 +4,8 @@ import {
   getSkipTake,
   type PaginatedResult,
 } from '../common/dto/pagination.dto.js';
-import { NotificationType } from '../common/prisma-enums.js';
+import type { AuthUser } from '../common/decorators/current-user.decorator.js';
+import { NotificationType, Role } from '../common/prisma-enums.js';
 import { MailerService } from '../mailer/mailer.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -70,10 +71,19 @@ export class MaintenanceService {
     return log;
   }
 
-  async findAll(query: QueryMaintenanceDto): Promise<PaginatedResult<unknown>> {
+  async findAll(
+    query: QueryMaintenanceDto,
+    currentUser?: AuthUser,
+  ): Promise<PaginatedResult<unknown>> {
     const { skip, take, page, limit } = getSkipTake(query.page, query.limit);
 
+    const ownerFilter =
+      currentUser?.role === Role.USER
+        ? { extinguisher: { ownerId: currentUser.id } }
+        : {};
+
     const where = {
+      ...ownerFilter,
       ...(query.extinguisherId ? { extinguisherId: query.extinguisherId } : {}),
       ...(query.inspectorId ? { inspectorId: query.inspectorId } : {}),
     };

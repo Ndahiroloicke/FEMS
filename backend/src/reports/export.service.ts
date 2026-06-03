@@ -22,10 +22,15 @@ interface ReportTable {
 export class ExportService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private async buildTable(report: ReportName): Promise<ReportTable> {
+  private async buildTable(
+    report: ReportName,
+    userId?: string,
+  ): Promise<ReportTable> {
+    const ownerFilter = userId ? { ownerId: userId } : {};
     switch (report) {
       case 'extinguishers': {
         const rows = await this.prisma.fireExtinguisher.findMany({
+          where: ownerFilter,
           orderBy: { createdAt: 'desc' },
         });
         return {
@@ -52,6 +57,7 @@ export class ExportService {
       }
       case 'inspections': {
         const rows = await this.prisma.inspection.findMany({
+          where: userId ? { extinguisher: { ownerId: userId } } : {},
           orderBy: { scheduledAt: 'desc' },
           include: {
             extinguisher: { select: { serialNumber: true } },
@@ -82,6 +88,7 @@ export class ExportService {
       }
       case 'maintenance': {
         const rows = await this.prisma.maintenanceLog.findMany({
+          where: userId ? { extinguisher: { ownerId: userId } } : {},
           orderBy: { actionDate: 'desc' },
           include: {
             extinguisher: { select: { serialNumber: true } },
@@ -110,6 +117,7 @@ export class ExportService {
         const now = new Date();
         const rows = await this.prisma.fireExtinguisher.findMany({
           where: {
+            ...ownerFilter,
             OR: [
               { status: ExtinguisherStatus.EXPIRED },
               { expiryDate: { lt: now } },
@@ -134,7 +142,12 @@ export class ExportService {
     }
   }
 
-  async export(report: ReportName, format: ExportFormat, res: Response) {
+  async export(
+    report: ReportName,
+    format: ExportFormat,
+    res: Response,
+    userId?: string,
+  ) {
     if (
       !['extinguishers', 'inspections', 'maintenance', 'expired'].includes(
         report,
@@ -146,7 +159,7 @@ export class ExportService {
       throw new BadRequestException(`Unsupported format: ${String(format)}`);
     }
 
-    const table = await this.buildTable(report);
+    const table = await this.buildTable(report, userId);
     const filename = `${report}-${new Date().toISOString().slice(0, 10)}.${format}`;
 
     if (format === 'csv') {

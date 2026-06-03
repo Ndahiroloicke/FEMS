@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../common/decorators/current-user.decorator.js';
+import type { AuthUser } from '../common/decorators/current-user.decorator.js';
 import { Roles } from '../common/decorators/roles.decorator.js';
 import { RolesGuard } from '../common/guards/roles.guard.js';
 import { Role } from '../common/prisma-enums.js';
@@ -31,9 +32,9 @@ export class MaintenanceController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'List maintenance logs (paginated)' })
-  findAll(@Query() query: QueryMaintenanceDto) {
-    return this.maintenanceService.findAll(query);
+  @ApiOperation({ summary: 'List maintenance logs (paginated); USER role only sees their own' })
+  findAll(@Query() query: QueryMaintenanceDto, @CurrentUser() user: AuthUser) {
+    return this.maintenanceService.findAll(query, user);
   }
 
   @Get(':id')

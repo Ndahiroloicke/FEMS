@@ -1,6 +1,8 @@
 import { Controller, Get, Query, Res, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
+import { CurrentUser } from '../common/decorators/current-user.decorator.js';
+import type { AuthUser } from '../common/decorators/current-user.decorator.js';
 import { Roles } from '../common/decorators/roles.decorator.js';
 import { RolesGuard } from '../common/guards/roles.guard.js';
 import { Role } from '../common/prisma-enums.js';
@@ -23,14 +25,16 @@ export class ReportsController {
 
   @Get('summary')
   @ApiOperation({ summary: 'Aggregate dashboard summary' })
-  getSummary() {
-    return this.reportsService.getSummary();
+  getSummary(@CurrentUser() user: AuthUser) {
+    const userId = user.role === Role.USER ? user.id : undefined;
+    return this.reportsService.getSummary(userId);
   }
 
   @Get('stock')
   @ApiOperation({ summary: 'Time-bucketed stock counts' })
-  getStock(@Query() query: StockQueryDto) {
-    return this.reportsService.getStock(query.period ?? 'monthly');
+  getStock(@Query() query: StockQueryDto, @CurrentUser() user: AuthUser) {
+    const userId = user.role === Role.USER ? user.id : undefined;
+    return this.reportsService.getStock(query.period ?? 'monthly', userId);
   }
 
   @Get('inspection-status')
@@ -57,9 +61,14 @@ export class ReportsController {
 
   @Get('export')
   @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN, Role.INSPECTOR)
-  @ApiOperation({ summary: 'Export a report as CSV or PDF (ADMIN/INSPECTOR only)' })
-  export(@Query() query: ExportQueryDto, @Res() res: Response) {
-    return this.exportService.export(query.report, query.format, res);
+  @Roles(Role.ADMIN, Role.INSPECTOR, Role.USER)
+  @ApiOperation({ summary: 'Export a report as CSV or PDF' })
+  export(
+    @Query() query: ExportQueryDto,
+    @Res() res: Response,
+    @CurrentUser() user: AuthUser,
+  ) {
+    const userId = user.role === Role.USER ? user.id : undefined;
+    return this.exportService.export(query.report, query.format, res, userId);
   }
 }

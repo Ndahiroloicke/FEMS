@@ -6,6 +6,6 @@ export declare class ExportService {
     private readonly prisma;
     constructor(prisma: PrismaService);
     private buildTable;
-    export(report: ReportName, format: ExportFormat, res: Response): Promise<void>;
+    export(report: ReportName, format: ExportFormat, res: Response, userId?: string): Promise<void>;
     private renderPdf;
 }

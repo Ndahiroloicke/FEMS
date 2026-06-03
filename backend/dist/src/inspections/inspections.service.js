@@ -62,8 +62,18 @@ let InspectionsService = class InspectionsService {
             },
             include: inspectionInclude,
         });
-        const message = `Inspection scheduled for extinguisher ${extinguisher.serialNumber} (${extinguisher.location}) on ${inspection.scheduledAt.toISOString()}.`;
         const sendEmail = this.mailer.isConfigured;
+        if (initialStatus === prisma_enums_js_1.InspectionStatus.PENDING) {
+            await this.notifications.createNotification({
+                userId: currentUser.id,
+                type: prisma_enums_js_1.NotificationType.INSPECTION_SCHEDULED,
+                message: `Your inspection request for ${extinguisher.serialNumber} (${extinguisher.location}) has been submitted and is pending review.`,
+                extinguisherId: extinguisher.id,
+                emailSubject: 'FEMS — Inspection request submitted',
+                sendEmail,
+            });
+        }
+        const message = `Inspection scheduled for extinguisher ${extinguisher.serialNumber} (${extinguisher.location}) on ${inspection.scheduledAt.toISOString()}.`;
         if (dto.inspectorId) {
             await this.notifications.createNotification({
                 userId: dto.inspectorId,
@@ -118,14 +128,19 @@ let InspectionsService = class InspectionsService {
         return inspection;
     }
     async approve(id, dto) {
-        const current = await this.prisma.inspection.findUnique({ where: { id } });
+        const current = await this.prisma.inspection.findUnique({
+            where: { id },
+            include: {
+                extinguisher: { select: { serialNumber: true, location: true } },
+            },
+        });
         if (!current) {
             throw new common_1.NotFoundException(`Inspection ${id} not found`);
         }
         if (current.status !== prisma_enums_js_1.InspectionStatus.PENDING) {
             throw new common_1.BadRequestException('Only PENDING inspection requests can be approved');
         }
-        return this.prisma.inspection.update({
+        const updated = await this.prisma.inspection.update({
             where: { id },
             data: {
                 status: prisma_enums_js_1.InspectionStatus.SCHEDULED,
@@ -134,6 +149,17 @@ let InspectionsService = class InspectionsService {
             },
             include: inspectionInclude,
         });
+        if (current.scheduledById) {
+            await this.notifications.createNotification({
+                userId: current.scheduledById,
+                type: prisma_enums_js_1.NotificationType.INSPECTION_SCHEDULED,
+                message: `Your inspection request for extinguisher ${current.extinguisher.serialNumber} (${current.extinguisher.location}) has been approved and scheduled.`,
+                extinguisherId: current.extinguisherId,
+                emailSubject: 'FEMS — Inspection request approved',
+                sendEmail: this.mailer.isConfigured,
+            });
+        }
+        return updated;
     }
     async update(id, dto) {
         const current = await this.prisma.inspection.findUnique({ where: { id } });

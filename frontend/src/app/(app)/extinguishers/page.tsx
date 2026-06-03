@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
-import { Eye, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { Eye, Pencil, Plus, Search, Trash2, UserCog } from "lucide-react";
 import {
   PageHeader,
   Card,
@@ -29,6 +29,7 @@ import {
   type ExtinguisherStatus,
   type ExtinguisherType,
   type PageMeta,
+  type User,
 } from "@/lib/api";
 import { formatDate, formatDateTime, formatEnum, toDateInput } from "@/lib/utils";
 
@@ -97,6 +98,11 @@ export default function ExtinguishersPage() {
 
   const [deleteTarget, setDeleteTarget] = useState<FireExtinguisher | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  const [assignTarget, setAssignTarget] = useState<FireExtinguisher | null>(null);
+  const [assignUserId, setAssignUserId] = useState<string>("");
+  const [assigning, setAssigning] = useState(false);
+  const [usersList, setUsersList] = useState<User[]>([]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -207,6 +213,35 @@ export default function ExtinguishersPage() {
       toast.error(err instanceof ApiError ? err.message : "Failed to delete");
     } finally {
       setDeleting(false);
+    }
+  }
+
+  async function openAssign(ext: FireExtinguisher) {
+    setAssignTarget(ext);
+    setAssignUserId(ext.ownerId ?? "");
+    if (usersList.length === 0) {
+      try {
+        const res = await api.users.list({ limit: 200 });
+        setUsersList(res.data);
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+
+  async function handleAssign(overrideOwnerId?: string | null) {
+    if (!assignTarget) return;
+    setAssigning(true);
+    const ownerId = overrideOwnerId !== undefined ? overrideOwnerId : assignUserId || null;
+    try {
+      await api.extinguishers.assign(assignTarget.id, { ownerId });
+      toast.success(ownerId ? "Owner assigned successfully" : "Owner unassigned successfully");
+      setAssignTarget(null);
+      await load();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to assign owner");
+    } finally {
+      setAssigning(false);
     }
   }
 
@@ -339,6 +374,16 @@ export default function ExtinguishersPage() {
                               title="Edit"
                             >
                               <Pencil className="h-4 w-4" />
+                            </button>
+                          )}
+                          {isAdmin && (
+                            <button
+                              type="button"
+                              onClick={() => openAssign(ext)}
+                              className="rounded-md p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
+                              title="Assign owner"
+                            >
+                              <UserCog className="h-4 w-4" />
                             </button>
                           )}
                           {isAdmin && (
@@ -555,6 +600,63 @@ export default function ExtinguishersPage() {
         onConfirm={handleDelete}
         onClose={() => setDeleteTarget(null)}
       />
+
+      {/* Assign Owner modal */}
+      <Modal
+        open={Boolean(assignTarget)}
+        onClose={() => setAssignTarget(null)}
+        title="Assign Extinguisher Owner"
+      >
+        <div className="space-y-4">
+          {assignTarget?.owner && (
+            <p className="text-sm text-slate-600">
+              Currently assigned to:{" "}
+              <span className="font-medium text-slate-900">
+                {assignTarget.owner.firstName} {assignTarget.owner.lastName}{" "}
+                <span className="font-normal text-slate-500">
+                  ({assignTarget.owner.email})
+                </span>
+              </span>
+            </p>
+          )}
+          {!assignTarget?.owner && (
+            <p className="text-sm text-slate-400">No owner currently assigned.</p>
+          )}
+          <Select
+            label="Assign to user"
+            value={assignUserId}
+            onChange={(e) => setAssignUserId(e.target.value)}
+          >
+            <option value="">— Unassigned —</option>
+            {usersList.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.firstName} {u.lastName} ({u.email})
+              </option>
+            ))}
+          </Select>
+          <div className="flex gap-2">
+            <Button loading={assigning} disabled={assigning} onClick={() => handleAssign()}>
+              Save
+            </Button>
+            {assignTarget?.owner && (
+              <Button
+                variant="secondary"
+                disabled={assigning}
+                onClick={() => handleAssign(null)}
+              >
+                Unassign
+              </Button>
+            )}
+            <Button
+              variant="secondary"
+              onClick={() => setAssignTarget(null)}
+              disabled={assigning}
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </>
   );
 }

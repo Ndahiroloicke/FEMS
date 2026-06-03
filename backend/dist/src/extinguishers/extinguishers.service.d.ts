@@ -1,6 +1,7 @@
 import { type PaginatedResult } from '../common/dto/pagination.dto.js';
 import type { AuthUser } from '../common/decorators/current-user.decorator.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { AssignExtinguisherDto } from './dto/assign-extinguisher.dto.js';
 import { CreateExtinguisherDto } from './dto/create-extinguisher.dto.js';
 import { QueryExtinguisherDto } from './dto/query-extinguisher.dto.js';
 import { UpdateExtinguisherDto } from './dto/update-extinguisher.dto.js';
@@ -72,6 +73,26 @@ export declare class ExtinguishersService {
         ownerId: string | null;
     }>;
     update(id: string, dto: UpdateExtinguisherDto): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        serialNumber: string;
+        type: import("../common/prisma-enums.js").ExtinguisherType;
+        expiryDate: Date;
+        status: import("../common/prisma-enums.js").ExtinguisherStatus;
+        location: string;
+        size: string;
+        installationDate: Date;
+        ownerId: string | null;
+    }>;
+    assign(id: string, dto: AssignExtinguisherDto): Promise<{
+        owner: {
+            id: string;
+            email: string;
+            firstName: string;
+            lastName: string;
+        } | null;
+    } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;

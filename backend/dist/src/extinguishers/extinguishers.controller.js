@@ -19,6 +19,7 @@ const current_user_decorator_js_1 = require("../common/decorators/current-user.d
 const roles_decorator_js_1 = require("../common/decorators/roles.decorator.js");
 const roles_guard_js_1 = require("../common/guards/roles.guard.js");
 const prisma_enums_js_1 = require("../common/prisma-enums.js");
+const assign_extinguisher_dto_js_1 = require("./dto/assign-extinguisher.dto.js");
 const create_extinguisher_dto_js_1 = require("./dto/create-extinguisher.dto.js");
 const query_extinguisher_dto_js_1 = require("./dto/query-extinguisher.dto.js");
 const update_extinguisher_dto_js_1 = require("./dto/update-extinguisher.dto.js");
@@ -35,6 +36,9 @@ let ExtinguishersController = class ExtinguishersController {
     }
     findOne(id, user) {
         return this.extinguishersService.findOne(id, user);
+    }
+    assign(id, dto) {
+        return this.extinguishersService.assign(id, dto);
     }
     update(id, dto) {
         return this.extinguishersService.update(id, dto);
@@ -71,6 +75,16 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], ExtinguishersController.prototype, "findOne", null);
+__decorate([
+    (0, common_1.Patch)(':id/assign'),
+    (0, roles_decorator_js_1.Roles)(prisma_enums_js_1.Role.ADMIN),
+    (0, swagger_1.ApiOperation)({ summary: 'Assign/unassign an extinguisher owner (ADMIN only)' }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, assign_extinguisher_dto_js_1.AssignExtinguisherDto]),
+    __metadata("design:returntype", void 0)
+], ExtinguishersController.prototype, "assign", null);
 __decorate([
     (0, common_1.Patch)(':id'),
     (0, roles_decorator_js_1.Roles)(prisma_enums_js_1.Role.ADMIN, prisma_enums_js_1.Role.INSPECTOR),

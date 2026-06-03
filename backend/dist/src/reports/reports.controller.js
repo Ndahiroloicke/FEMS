@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ReportsController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
+const current_user_decorator_js_1 = require("../common/decorators/current-user.decorator.js");
 const roles_decorator_js_1 = require("../common/decorators/roles.decorator.js");
 const roles_guard_js_1 = require("../common/guards/roles.guard.js");
 const prisma_enums_js_1 = require("../common/prisma-enums.js");
@@ -26,11 +27,13 @@ let ReportsController = class ReportsController {
         this.reportsService = reportsService;
         this.exportService = exportService;
     }
-    getSummary() {
-        return this.reportsService.getSummary();
+    getSummary(user) {
+        const userId = user.role === prisma_enums_js_1.Role.USER ? user.id : undefined;
+        return this.reportsService.getSummary(userId);
     }
-    getStock(query) {
-        return this.reportsService.getStock(query.period ?? 'monthly');
+    getStock(query, user) {
+        const userId = user.role === prisma_enums_js_1.Role.USER ? user.id : undefined;
+        return this.reportsService.getStock(query.period ?? 'monthly', userId);
     }
     getInspectionStatus() {
         return this.reportsService.getInspectionStatusCounts();
@@ -41,24 +44,27 @@ let ReportsController = class ReportsController {
     getMaintenanceHistory(query) {
         return this.reportsService.getMaintenanceHistory(query.extinguisherId, query.page, query.limit);
     }
-    export(query, res) {
-        return this.exportService.export(query.report, query.format, res);
+    export(query, res, user) {
+        const userId = user.role === prisma_enums_js_1.Role.USER ? user.id : undefined;
+        return this.exportService.export(query.report, query.format, res, userId);
     }
 };
 exports.ReportsController = ReportsController;
 __decorate([
     (0, common_1.Get)('summary'),
     (0, swagger_1.ApiOperation)({ summary: 'Aggregate dashboard summary' }),
+    __param(0, (0, current_user_decorator_js_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], ReportsController.prototype, "getSummary", null);
 __decorate([
     (0, common_1.Get)('stock'),
     (0, swagger_1.ApiOperation)({ summary: 'Time-bucketed stock counts' }),
     __param(0, (0, common_1.Query)()),
+    __param(1, (0, current_user_decorator_js_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [export_query_dto_js_1.StockQueryDto]),
+    __metadata("design:paramtypes", [export_query_dto_js_1.StockQueryDto, Object]),
     __metadata("design:returntype", void 0)
 ], ReportsController.prototype, "getStock", null);
 __decorate([
@@ -87,12 +93,13 @@ __decorate([
 __decorate([
     (0, common_1.Get)('export'),
     (0, common_1.UseGuards)(roles_guard_js_1.RolesGuard),
-    (0, roles_decorator_js_1.Roles)(prisma_enums_js_1.Role.ADMIN, prisma_enums_js_1.Role.INSPECTOR),
-    (0, swagger_1.ApiOperation)({ summary: 'Export a report as CSV or PDF (ADMIN/INSPECTOR only)' }),
+    (0, roles_decorator_js_1.Roles)(prisma_enums_js_1.Role.ADMIN, prisma_enums_js_1.Role.INSPECTOR, prisma_enums_js_1.Role.USER),
+    (0, swagger_1.ApiOperation)({ summary: 'Export a report as CSV or PDF' }),
     __param(0, (0, common_1.Query)()),
     __param(1, (0, common_1.Res)()),
+    __param(2, (0, current_user_decorator_js_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [export_query_dto_js_1.ExportQueryDto, Object]),
+    __metadata("design:paramtypes", [export_query_dto_js_1.ExportQueryDto, Object, Object]),
     __metadata("design:returntype", void 0)
 ], ReportsController.prototype, "export", null);
 exports.ReportsController = ReportsController = __decorate([

@@ -15,6 +15,7 @@ import type { AuthUser } from '../common/decorators/current-user.decorator.js';
 import { Roles } from '../common/decorators/roles.decorator.js';
 import { RolesGuard } from '../common/guards/roles.guard.js';
 import { Role } from '../common/prisma-enums.js';
+import { AssignExtinguisherDto } from './dto/assign-extinguisher.dto.js';
 import { CreateExtinguisherDto } from './dto/create-extinguisher.dto.js';
 import { QueryExtinguisherDto } from './dto/query-extinguisher.dto.js';
 import { UpdateExtinguisherDto } from './dto/update-extinguisher.dto.js';
@@ -44,6 +45,13 @@ export class ExtinguishersController {
   @ApiOperation({ summary: 'Get extinguisher details' })
   findOne(@Param('id') id: string, @CurrentUser() user: AuthUser) {
     return this.extinguishersService.findOne(id, user);
+  }
+
+  @Patch(':id/assign')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Assign/unassign an extinguisher owner (ADMIN only)' })
+  assign(@Param('id') id: string, @Body() dto: AssignExtinguisherDto) {
+    return this.extinguishersService.assign(id, dto);
   }
 
   @Patch(':id')

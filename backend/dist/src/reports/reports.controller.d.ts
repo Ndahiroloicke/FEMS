@@ -1,4 +1,5 @@
 import { Response } from 'express';
+import type { AuthUser } from '../common/decorators/current-user.decorator.js';
 import { ExportQueryDto, MaintenanceHistoryQueryDto, StockQueryDto } from './dto/export-query.dto.js';
 import { ExportService } from './export.service.js';
 import { ReportsService } from './reports.service.js';
@@ -6,7 +7,7 @@ export declare class ReportsController {
     private readonly reportsService;
     private readonly exportService;
     constructor(reportsService: ReportsService, exportService: ExportService);
-    getSummary(): Promise<{
+    getSummary(user: AuthUser): Promise<{
         totalExtinguishers: number;
         byStatus: Record<string, number>;
         byType: Record<string, number>;
@@ -16,7 +17,7 @@ export declare class ReportsController {
         activeInspections: number;
         expiredCount: number;
     }>;
-    getStock(query: StockQueryDto): Promise<{
+    getStock(query: StockQueryDto, user: AuthUser): Promise<{
         period: string;
         count: number;
     }[]>;
@@ -26,5 +27,5 @@ export declare class ReportsController {
     }>;
     getExpired(query: MaintenanceHistoryQueryDto): Promise<import("../common/dto/pagination.dto.js").PaginatedResult<unknown>>;
     getMaintenanceHistory(query: MaintenanceHistoryQueryDto): Promise<import("../common/dto/pagination.dto.js").PaginatedResult<unknown>>;
-    export(query: ExportQueryDto, res: Response): Promise<void>;
+    export(query: ExportQueryDto, res: Response, user: AuthUser): Promise<void>;
 }

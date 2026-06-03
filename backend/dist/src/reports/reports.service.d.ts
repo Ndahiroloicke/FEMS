@@ -7,7 +7,7 @@ export declare class ReportsService {
     private startOfToday;
     private startOfMonth;
     private startOfYear;
-    getSummary(): Promise<{
+    getSummary(userId?: string): Promise<{
         totalExtinguishers: number;
         byStatus: Record<string, number>;
         byType: Record<string, number>;
@@ -17,7 +17,7 @@ export declare class ReportsService {
         activeInspections: number;
         expiredCount: number;
     }>;
-    getStock(period: StockPeriod): Promise<{
+    getStock(period: StockPeriod, userId?: string): Promise<{
         period: string;
         count: number;
     }[]>;

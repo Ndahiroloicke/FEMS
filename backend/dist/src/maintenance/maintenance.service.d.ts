@@ -1,4 +1,5 @@
 import { type PaginatedResult } from '../common/dto/pagination.dto.js';
+import type { AuthUser } from '../common/decorators/current-user.decorator.js';
 import { MailerService } from '../mailer/mailer.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -30,18 +31,8 @@ export declare class MaintenanceService {
         conditionNoted: import("../common/prisma-enums.js").MaintenanceCondition;
         actionDate: Date;
     }>;
-    findAll(query: QueryMaintenanceDto): Promise<PaginatedResult<unknown>>;
+    findAll(query: QueryMaintenanceDto, currentUser?: AuthUser): Promise<PaginatedResult<unknown>>;
     findOne(id: string): Promise<{
-        extinguisher: {
-            id: string;
-            serialNumber: string;
-            location: string;
-        };
-        inspector: {
-            id: string;
-            firstName: string;
-            lastName: string;
-        };
         inspection: {
             id: string;
             createdAt: Date;
@@ -55,6 +46,16 @@ export declare class MaintenanceService {
             result: string | null;
             completedAt: Date | null;
         } | null;
+        extinguisher: {
+            id: string;
+            serialNumber: string;
+            location: string;
+        };
+        inspector: {
+            id: string;
+            firstName: string;
+            lastName: string;
+        };
     } & {
         id: string;
         createdAt: Date;

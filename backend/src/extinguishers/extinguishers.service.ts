@@ -13,6 +13,7 @@ import {
 import type { AuthUser } from '../common/decorators/current-user.decorator.js';
 import { Role } from '../common/prisma-enums.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { AssignExtinguisherDto } from './dto/assign-extinguisher.dto.js';
 import { CreateExtinguisherDto } from './dto/create-extinguisher.dto.js';
 import { QueryExtinguisherDto } from './dto/query-extinguisher.dto.js';
 import { UpdateExtinguisherDto } from './dto/update-extinguisher.dto.js';
@@ -180,6 +181,34 @@ export class ExtinguishersService {
         status: dto.status,
         installationDate: dto.installationDate ? installationDate : undefined,
         expiryDate: dto.expiryDate ? expiryDate : undefined,
+      },
+    });
+  }
+
+  async assign(id: string, dto: AssignExtinguisherDto) {
+    const current = await this.prisma.fireExtinguisher.findUnique({
+      where: { id },
+    });
+    if (!current) {
+      throw new NotFoundException(`Extinguisher ${id} not found`);
+    }
+
+    if (dto.ownerId) {
+      const owner = await this.prisma.user.findUnique({
+        where: { id: dto.ownerId },
+      });
+      if (!owner) {
+        throw new NotFoundException(`User ${dto.ownerId} not found`);
+      }
+    }
+
+    return this.prisma.fireExtinguisher.update({
+      where: { id },
+      data: { ownerId: dto.ownerId ?? null },
+      include: {
+        owner: {
+          select: { id: true, firstName: true, lastName: true, email: true },
+        },
       },
     });
   }

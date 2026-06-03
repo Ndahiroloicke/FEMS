@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
-import { Plus } from "lucide-react";
+import { Download, Plus } from "lucide-react";
 import {
   PageHeader,
   Card,
@@ -56,6 +56,8 @@ export default function MaintenancePage() {
   const { role } = useAuth();
   const toast = useToast();
   const canManage = role === "ADMIN" || role === "INSPECTOR";
+  const isUser = role === "USER";
+  const [exporting, setExporting] = useState(false);
 
   const [items, setItems] = useState<MaintenanceLog[]>([]);
   const [meta, setMeta] = useState<PageMeta | null>(null);
@@ -160,18 +162,41 @@ export default function MaintenancePage() {
     }
   }
 
+  async function handleExport() {
+    setExporting(true);
+    try {
+      await api.reports.export({ report: "extinguishers", format: "csv" });
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Export failed");
+    } finally {
+      setExporting(false);
+    }
+  }
+
   return (
     <>
       <PageHeader
-        title="Maintenance"
-        description="Record maintenance actions performed on extinguishers"
+        title={isUser ? "My Maintenance History" : "Maintenance"}
+        description={
+          isUser
+            ? "Maintenance history for your assigned extinguishers"
+            : "Record maintenance actions performed on extinguishers"
+        }
         action={
-          canManage ? (
-            <Button onClick={openForm}>
-              <Plus className="h-4 w-4" />
-              Log maintenance
-            </Button>
-          ) : undefined
+          <div className="flex gap-2">
+            {isUser && (
+              <Button variant="secondary" onClick={handleExport} loading={exporting} disabled={exporting}>
+                <Download className="h-4 w-4" />
+                Export CSV
+              </Button>
+            )}
+            {canManage && (
+              <Button onClick={openForm}>
+                <Plus className="h-4 w-4" />
+                Log maintenance
+              </Button>
+            )}
+          </div>
         }
       />
 

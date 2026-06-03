@@ -64,9 +64,13 @@ let MaintenanceService = class MaintenanceService {
         });
         return log;
     }
-    async findAll(query) {
+    async findAll(query, currentUser) {
         const { skip, take, page, limit } = (0, pagination_dto_js_1.getSkipTake)(query.page, query.limit);
+        const ownerFilter = currentUser?.role === prisma_enums_js_1.Role.USER
+            ? { extinguisher: { ownerId: currentUser.id } }
+            : {};
         const where = {
+            ...ownerFilter,
             ...(query.extinguisherId ? { extinguisherId: query.extinguisherId } : {}),
             ...(query.inspectorId ? { inspectorId: query.inspectorId } : {}),
         };

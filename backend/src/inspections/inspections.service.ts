@@ -81,8 +81,20 @@ export class InspectionsService {
       include: inspectionInclude,
     });
 
-    const message = `Inspection scheduled for extinguisher ${extinguisher.serialNumber} (${extinguisher.location}) on ${inspection.scheduledAt.toISOString()}.`;
     const sendEmail = this.mailer.isConfigured;
+
+    if (initialStatus === InspectionStatus.PENDING) {
+      await this.notifications.createNotification({
+        userId: currentUser.id,
+        type: NotificationType.INSPECTION_SCHEDULED,
+        message: `Your inspection request for ${extinguisher.serialNumber} (${extinguisher.location}) has been submitted and is pending review.`,
+        extinguisherId: extinguisher.id,
+        emailSubject: 'FEMS — Inspection request submitted',
+        sendEmail,
+      });
+    }
+
+    const message = `Inspection scheduled for extinguisher ${extinguisher.serialNumber} (${extinguisher.location}) on ${inspection.scheduledAt.toISOString()}.`;
 
     if (dto.inspectorId) {
       await this.notifications.createNotification({
@@ -152,7 +164,12 @@ export class InspectionsService {
   }
 
   async approve(id: string, dto: UpdateInspectionDto) {
-    const current = await this.prisma.inspection.findUnique({ where: { id } });
+    const current = await this.prisma.inspection.findUnique({
+      where: { id },
+      include: {
+        extinguisher: { select: { serialNumber: true, location: true } },
+      },
+    });
     if (!current) {
       throw new NotFoundException(`Inspection ${id} not found`);
     }
@@ -161,7 +178,8 @@ export class InspectionsService {
         'Only PENDING inspection requests can be approved',
       );
     }
-    return this.prisma.inspection.update({
+
+    const updated = await this.prisma.inspection.update({
       where: { id },
       data: {
         status: InspectionStatus.SCHEDULED,
@@ -170,6 +188,19 @@ export class InspectionsService {
       },
       include: inspectionInclude,
     });
+
+    if (current.scheduledById) {
+      await this.notifications.createNotification({
+        userId: current.scheduledById,
+        type: NotificationType.INSPECTION_SCHEDULED,
+        message: `Your inspection request for extinguisher ${current.extinguisher.serialNumber} (${current.extinguisher.location}) has been approved and scheduled.`,
+        extinguisherId: current.extinguisherId,
+        emailSubject: 'FEMS — Inspection request approved',
+        sendEmail: this.mailer.isConfigured,
+      });
+    }
+
+    return updated;
   }
 
   async update(id: string, dto: UpdateInspectionDto) {

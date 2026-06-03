@@ -22,10 +22,12 @@ let ExportService = class ExportService {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async buildTable(report) {
+    async buildTable(report, userId) {
+        const ownerFilter = userId ? { ownerId: userId } : {};
         switch (report) {
             case 'extinguishers': {
                 const rows = await this.prisma.fireExtinguisher.findMany({
+                    where: ownerFilter,
                     orderBy: { createdAt: 'desc' },
                 });
                 return {
@@ -52,6 +54,7 @@ let ExportService = class ExportService {
             }
             case 'inspections': {
                 const rows = await this.prisma.inspection.findMany({
+                    where: userId ? { extinguisher: { ownerId: userId } } : {},
                     orderBy: { scheduledAt: 'desc' },
                     include: {
                         extinguisher: { select: { serialNumber: true } },
@@ -82,6 +85,7 @@ let ExportService = class ExportService {
             }
             case 'maintenance': {
                 const rows = await this.prisma.maintenanceLog.findMany({
+                    where: userId ? { extinguisher: { ownerId: userId } } : {},
                     orderBy: { actionDate: 'desc' },
                     include: {
                         extinguisher: { select: { serialNumber: true } },
@@ -110,6 +114,7 @@ let ExportService = class ExportService {
                 const now = new Date();
                 const rows = await this.prisma.fireExtinguisher.findMany({
                     where: {
+                        ...ownerFilter,
                         OR: [
                             { status: prisma_enums_js_1.ExtinguisherStatus.EXPIRED },
                             { expiryDate: { lt: now } },
@@ -133,14 +138,14 @@ let ExportService = class ExportService {
                 throw new common_1.BadRequestException(`Unknown report: ${report}`);
         }
     }
-    async export(report, format, res) {
+    async export(report, format, res, userId) {
         if (!['extinguishers', 'inspections', 'maintenance', 'expired'].includes(report)) {
             throw new common_1.BadRequestException(`Unknown report: ${report}`);
         }
         if (format !== 'csv' && format !== 'pdf') {
             throw new common_1.BadRequestException(`Unsupported format: ${String(format)}`);
         }
-        const table = await this.buildTable(report);
+        const table = await this.buildTable(report, userId);
         const filename = `${report}-${new Date().toISOString().slice(0, 10)}.${format}`;
         if (format === 'csv') {
             const parser = new plainjs_1.Parser({ fields: table.fields });
