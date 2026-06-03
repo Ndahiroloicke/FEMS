@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../common/decorators/current-user.decorator.js';
+import type { AuthUser } from '../common/decorators/current-user.decorator.js';
 import { Roles } from '../common/decorators/roles.decorator.js';
 import { RolesGuard } from '../common/guards/roles.guard.js';
 import { Role } from '../common/prisma-enums.js';
@@ -27,15 +28,18 @@ export class InspectionsController {
   constructor(private readonly inspectionsService: InspectionsService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Schedule an inspection' })
-  create(@Body() dto: CreateInspectionDto, @CurrentUser('id') userId: string) {
-    return this.inspectionsService.create(dto, userId);
+  @ApiOperation({
+    summary:
+      'Create inspection. ADMIN/INSPECTOR → SCHEDULED. USER → PENDING request.',
+  })
+  create(@Body() dto: CreateInspectionDto, @CurrentUser() user: AuthUser) {
+    return this.inspectionsService.create(dto, user);
   }
 
   @Get()
-  @ApiOperation({ summary: 'List inspections (paginated)' })
-  findAll(@Query() query: QueryInspectionDto) {
-    return this.inspectionsService.findAll(query);
+  @ApiOperation({ summary: 'List inspections (paginated); USER sees only their requests' })
+  findAll(@Query() query: QueryInspectionDto, @CurrentUser() user: AuthUser) {
+    return this.inspectionsService.findAll(query, user);
   }
 
   @Get(':id')
@@ -44,9 +48,16 @@ export class InspectionsController {
     return this.inspectionsService.findOne(id);
   }
 
+  @Patch(':id/approve')
+  @Roles(Role.ADMIN, Role.INSPECTOR)
+  @ApiOperation({ summary: 'Approve a PENDING inspection request (ADMIN/INSPECTOR)' })
+  approve(@Param('id') id: string, @Body() dto: UpdateInspectionDto) {
+    return this.inspectionsService.approve(id, dto);
+  }
+
   @Patch(':id')
   @Roles(Role.ADMIN, Role.INSPECTOR)
-  @ApiOperation({ summary: 'Update an inspection' })
+  @ApiOperation({ summary: 'Update an inspection (ADMIN/INSPECTOR)' })
   update(@Param('id') id: string, @Body() dto: UpdateInspectionDto) {
     return this.inspectionsService.update(id, dto);
   }

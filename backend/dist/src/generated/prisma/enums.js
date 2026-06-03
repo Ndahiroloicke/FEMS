@@ -19,6 +19,8 @@ exports.ExtinguisherStatus = {
     OUT_OF_SERVICE: 'OUT_OF_SERVICE'
 };
 exports.InspectionStatus = {
+    PENDING: 'PENDING',
+    APPROVED: 'APPROVED',
     SCHEDULED: 'SCHEDULED',
     IN_PROGRESS: 'IN_PROGRESS',
     COMPLETED: 'COMPLETED',

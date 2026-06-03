@@ -17,24 +17,26 @@ class CreateInspectionDto {
 exports.CreateInspectionDto = CreateInspectionDto;
 __decorate([
     (0, swagger_1.ApiProperty)({ example: 'uuid-of-extinguisher' }),
-    (0, class_validator_1.IsUUID)(),
+    (0, class_validator_1.IsUUID)('4', { message: 'extinguisherId must be a valid UUID' }),
     __metadata("design:type", String)
 ], CreateInspectionDto.prototype, "extinguisherId", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ example: '2026-07-01T09:00:00.000Z' }),
-    (0, class_validator_1.IsDateString)(),
+    (0, class_validator_1.IsDateString)({}, { message: 'scheduledAt must be a valid ISO date' }),
     __metadata("design:type", String)
 ], CreateInspectionDto.prototype, "scheduledAt", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({ example: 'uuid-of-inspector' }),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsUUID)(),
+    (0, class_validator_1.IsUUID)('4', { message: 'inspectorId must be a valid UUID' }),
     __metadata("design:type", String)
 ], CreateInspectionDto.prototype, "inspectorId", void 0);
 __decorate([
-    (0, swagger_1.ApiPropertyOptional)({ example: 'Annual pressure check' }),
+    (0, swagger_1.ApiPropertyOptional)({ example: 'Extinguisher in Hall B looks damaged' }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)({ message: 'Notes cannot be blank if provided' }),
+    (0, class_validator_1.MinLength)(5, { message: 'Notes must be at least 5 characters if provided' }),
     __metadata("design:type", String)
 ], CreateInspectionDto.prototype, "notes", void 0);
 //# sourceMappingURL=create-inspection.dto.js.map

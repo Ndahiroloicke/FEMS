@@ -149,6 +149,7 @@ export type UserWhereInput = {
     assignedInspections?: Prisma.InspectionListRelationFilter;
     maintenanceLogs?: Prisma.MaintenanceLogListRelationFilter;
     notifications?: Prisma.NotificationListRelationFilter;
+    ownedExtinguishers?: Prisma.FireExtinguisherListRelationFilter;
 };
 export type UserOrderByWithRelationInput = {
     id?: Prisma.SortOrder;
@@ -166,6 +167,7 @@ export type UserOrderByWithRelationInput = {
     assignedInspections?: Prisma.InspectionOrderByRelationAggregateInput;
     maintenanceLogs?: Prisma.MaintenanceLogOrderByRelationAggregateInput;
     notifications?: Prisma.NotificationOrderByRelationAggregateInput;
+    ownedExtinguishers?: Prisma.FireExtinguisherOrderByRelationAggregateInput;
 };
 export type UserWhereUniqueInput = Prisma.AtLeast<{
     id?: string;
@@ -186,6 +188,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
     assignedInspections?: Prisma.InspectionListRelationFilter;
     maintenanceLogs?: Prisma.MaintenanceLogListRelationFilter;
     notifications?: Prisma.NotificationListRelationFilter;
+    ownedExtinguishers?: Prisma.FireExtinguisherListRelationFilter;
 }, "id" | "email">;
 export type UserOrderByWithAggregationInput = {
     id?: Prisma.SortOrder;
@@ -235,6 +238,7 @@ export type UserCreateInput = {
     assignedInspections?: Prisma.InspectionCreateNestedManyWithoutInspectorInput;
     maintenanceLogs?: Prisma.MaintenanceLogCreateNestedManyWithoutInspectorInput;
     notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput;
+    ownedExtinguishers?: Prisma.FireExtinguisherCreateNestedManyWithoutOwnerInput;
 };
 export type UserUncheckedCreateInput = {
     id?: string;
@@ -252,6 +256,7 @@ export type UserUncheckedCreateInput = {
     assignedInspections?: Prisma.InspectionUncheckedCreateNestedManyWithoutInspectorInput;
     maintenanceLogs?: Prisma.MaintenanceLogUncheckedCreateNestedManyWithoutInspectorInput;
     notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput;
+    ownedExtinguishers?: Prisma.FireExtinguisherUncheckedCreateNestedManyWithoutOwnerInput;
 };
 export type UserUpdateInput = {
     id?: Prisma.StringFieldUpdateOperationsInput | string;
@@ -269,6 +274,7 @@ export type UserUpdateInput = {
     assignedInspections?: Prisma.InspectionUpdateManyWithoutInspectorNestedInput;
     maintenanceLogs?: Prisma.MaintenanceLogUpdateManyWithoutInspectorNestedInput;
     notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput;
+    ownedExtinguishers?: Prisma.FireExtinguisherUpdateManyWithoutOwnerNestedInput;
 };
 export type UserUncheckedUpdateInput = {
     id?: Prisma.StringFieldUpdateOperationsInput | string;
@@ -286,6 +292,7 @@ export type UserUncheckedUpdateInput = {
     assignedInspections?: Prisma.InspectionUncheckedUpdateManyWithoutInspectorNestedInput;
     maintenanceLogs?: Prisma.MaintenanceLogUncheckedUpdateManyWithoutInspectorNestedInput;
     notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput;
+    ownedExtinguishers?: Prisma.FireExtinguisherUncheckedUpdateManyWithoutOwnerNestedInput;
 };
 export type UserCreateManyInput = {
     id?: string;
@@ -365,13 +372,13 @@ export type UserMinOrderByAggregateInput = {
     createdAt?: Prisma.SortOrder;
     updatedAt?: Prisma.SortOrder;
 };
-export type UserScalarRelationFilter = {
-    is?: Prisma.UserWhereInput;
-    isNot?: Prisma.UserWhereInput;
-};
 export type UserNullableScalarRelationFilter = {
     is?: Prisma.UserWhereInput | null;
     isNot?: Prisma.UserWhereInput | null;
+};
+export type UserScalarRelationFilter = {
+    is?: Prisma.UserWhereInput;
+    isNot?: Prisma.UserWhereInput;
 };
 export type StringFieldUpdateOperationsInput = {
     set?: string;
@@ -390,6 +397,20 @@ export type NullableDateTimeFieldUpdateOperationsInput = {
 };
 export type DateTimeFieldUpdateOperationsInput = {
     set?: Date | string;
+};
+export type UserCreateNestedOneWithoutOwnedExtinguishersInput = {
+    create?: Prisma.XOR<Prisma.UserCreateWithoutOwnedExtinguishersInput, Prisma.UserUncheckedCreateWithoutOwnedExtinguishersInput>;
+    connectOrCreate?: Prisma.UserCreateOrConnectWithoutOwnedExtinguishersInput;
+    connect?: Prisma.UserWhereUniqueInput;
+};
+export type UserUpdateOneWithoutOwnedExtinguishersNestedInput = {
+    create?: Prisma.XOR<Prisma.UserCreateWithoutOwnedExtinguishersInput, Prisma.UserUncheckedCreateWithoutOwnedExtinguishersInput>;
+    connectOrCreate?: Prisma.UserCreateOrConnectWithoutOwnedExtinguishersInput;
+    upsert?: Prisma.UserUpsertWithoutOwnedExtinguishersInput;
+    disconnect?: Prisma.UserWhereInput | boolean;
+    delete?: Prisma.UserWhereInput | boolean;
+    connect?: Prisma.UserWhereUniqueInput;
+    update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutOwnedExtinguishersInput, Prisma.UserUpdateWithoutOwnedExtinguishersInput>, Prisma.UserUncheckedUpdateWithoutOwnedExtinguishersInput>;
 };
 export type UserCreateNestedOneWithoutScheduledInspectionsInput = {
     create?: Prisma.XOR<Prisma.UserCreateWithoutScheduledInspectionsInput, Prisma.UserUncheckedCreateWithoutScheduledInspectionsInput>;
@@ -441,6 +462,87 @@ export type UserUpdateOneRequiredWithoutNotificationsNestedInput = {
     connect?: Prisma.UserWhereUniqueInput;
     update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutNotificationsInput, Prisma.UserUpdateWithoutNotificationsInput>, Prisma.UserUncheckedUpdateWithoutNotificationsInput>;
 };
+export type UserCreateWithoutOwnedExtinguishersInput = {
+    id?: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    passwordHash: string;
+    role?: $Enums.Role;
+    isActive?: boolean;
+    resetToken?: string | null;
+    resetTokenExpiresAt?: Date | string | null;
+    createdAt?: Date | string;
+    updatedAt?: Date | string;
+    scheduledInspections?: Prisma.InspectionCreateNestedManyWithoutScheduledByInput;
+    assignedInspections?: Prisma.InspectionCreateNestedManyWithoutInspectorInput;
+    maintenanceLogs?: Prisma.MaintenanceLogCreateNestedManyWithoutInspectorInput;
+    notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput;
+};
+export type UserUncheckedCreateWithoutOwnedExtinguishersInput = {
+    id?: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    passwordHash: string;
+    role?: $Enums.Role;
+    isActive?: boolean;
+    resetToken?: string | null;
+    resetTokenExpiresAt?: Date | string | null;
+    createdAt?: Date | string;
+    updatedAt?: Date | string;
+    scheduledInspections?: Prisma.InspectionUncheckedCreateNestedManyWithoutScheduledByInput;
+    assignedInspections?: Prisma.InspectionUncheckedCreateNestedManyWithoutInspectorInput;
+    maintenanceLogs?: Prisma.MaintenanceLogUncheckedCreateNestedManyWithoutInspectorInput;
+    notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput;
+};
+export type UserCreateOrConnectWithoutOwnedExtinguishersInput = {
+    where: Prisma.UserWhereUniqueInput;
+    create: Prisma.XOR<Prisma.UserCreateWithoutOwnedExtinguishersInput, Prisma.UserUncheckedCreateWithoutOwnedExtinguishersInput>;
+};
+export type UserUpsertWithoutOwnedExtinguishersInput = {
+    update: Prisma.XOR<Prisma.UserUpdateWithoutOwnedExtinguishersInput, Prisma.UserUncheckedUpdateWithoutOwnedExtinguishersInput>;
+    create: Prisma.XOR<Prisma.UserCreateWithoutOwnedExtinguishersInput, Prisma.UserUncheckedCreateWithoutOwnedExtinguishersInput>;
+    where?: Prisma.UserWhereInput;
+};
+export type UserUpdateToOneWithWhereWithoutOwnedExtinguishersInput = {
+    where?: Prisma.UserWhereInput;
+    data: Prisma.XOR<Prisma.UserUpdateWithoutOwnedExtinguishersInput, Prisma.UserUncheckedUpdateWithoutOwnedExtinguishersInput>;
+};
+export type UserUpdateWithoutOwnedExtinguishersInput = {
+    id?: Prisma.StringFieldUpdateOperationsInput | string;
+    firstName?: Prisma.StringFieldUpdateOperationsInput | string;
+    lastName?: Prisma.StringFieldUpdateOperationsInput | string;
+    email?: Prisma.StringFieldUpdateOperationsInput | string;
+    passwordHash?: Prisma.StringFieldUpdateOperationsInput | string;
+    role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role;
+    isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+    resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    resetTokenExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+    createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    scheduledInspections?: Prisma.InspectionUpdateManyWithoutScheduledByNestedInput;
+    assignedInspections?: Prisma.InspectionUpdateManyWithoutInspectorNestedInput;
+    maintenanceLogs?: Prisma.MaintenanceLogUpdateManyWithoutInspectorNestedInput;
+    notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput;
+};
+export type UserUncheckedUpdateWithoutOwnedExtinguishersInput = {
+    id?: Prisma.StringFieldUpdateOperationsInput | string;
+    firstName?: Prisma.StringFieldUpdateOperationsInput | string;
+    lastName?: Prisma.StringFieldUpdateOperationsInput | string;
+    email?: Prisma.StringFieldUpdateOperationsInput | string;
+    passwordHash?: Prisma.StringFieldUpdateOperationsInput | string;
+    role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role;
+    isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+    resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    resetTokenExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+    createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    scheduledInspections?: Prisma.InspectionUncheckedUpdateManyWithoutScheduledByNestedInput;
+    assignedInspections?: Prisma.InspectionUncheckedUpdateManyWithoutInspectorNestedInput;
+    maintenanceLogs?: Prisma.MaintenanceLogUncheckedUpdateManyWithoutInspectorNestedInput;
+    notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput;
+};
 export type UserCreateWithoutScheduledInspectionsInput = {
     id?: string;
     firstName: string;
@@ -456,6 +558,7 @@ export type UserCreateWithoutScheduledInspectionsInput = {
     assignedInspections?: Prisma.InspectionCreateNestedManyWithoutInspectorInput;
     maintenanceLogs?: Prisma.MaintenanceLogCreateNestedManyWithoutInspectorInput;
     notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput;
+    ownedExtinguishers?: Prisma.FireExtinguisherCreateNestedManyWithoutOwnerInput;
 };
 export type UserUncheckedCreateWithoutScheduledInspectionsInput = {
     id?: string;
@@ -472,6 +575,7 @@ export type UserUncheckedCreateWithoutScheduledInspectionsInput = {
     assignedInspections?: Prisma.InspectionUncheckedCreateNestedManyWithoutInspectorInput;
     maintenanceLogs?: Prisma.MaintenanceLogUncheckedCreateNestedManyWithoutInspectorInput;
     notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput;
+    ownedExtinguishers?: Prisma.FireExtinguisherUncheckedCreateNestedManyWithoutOwnerInput;
 };
 export type UserCreateOrConnectWithoutScheduledInspectionsInput = {
     where: Prisma.UserWhereUniqueInput;
@@ -492,6 +596,7 @@ export type UserCreateWithoutAssignedInspectionsInput = {
     scheduledInspections?: Prisma.InspectionCreateNestedManyWithoutScheduledByInput;
     maintenanceLogs?: Prisma.MaintenanceLogCreateNestedManyWithoutInspectorInput;
     notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput;
+    ownedExtinguishers?: Prisma.FireExtinguisherCreateNestedManyWithoutOwnerInput;
 };
 export type UserUncheckedCreateWithoutAssignedInspectionsInput = {
     id?: string;
@@ -508,6 +613,7 @@ export type UserUncheckedCreateWithoutAssignedInspectionsInput = {
     scheduledInspections?: Prisma.InspectionUncheckedCreateNestedManyWithoutScheduledByInput;
     maintenanceLogs?: Prisma.MaintenanceLogUncheckedCreateNestedManyWithoutInspectorInput;
     notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput;
+    ownedExtinguishers?: Prisma.FireExtinguisherUncheckedCreateNestedManyWithoutOwnerInput;
 };
 export type UserCreateOrConnectWithoutAssignedInspectionsInput = {
     where: Prisma.UserWhereUniqueInput;
@@ -537,6 +643,7 @@ export type UserUpdateWithoutScheduledInspectionsInput = {
     assignedInspections?: Prisma.InspectionUpdateManyWithoutInspectorNestedInput;
     maintenanceLogs?: Prisma.MaintenanceLogUpdateManyWithoutInspectorNestedInput;
     notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput;
+    ownedExtinguishers?: Prisma.FireExtinguisherUpdateManyWithoutOwnerNestedInput;
 };
 export type UserUncheckedUpdateWithoutScheduledInspectionsInput = {
     id?: Prisma.StringFieldUpdateOperationsInput | string;
@@ -553,6 +660,7 @@ export type UserUncheckedUpdateWithoutScheduledInspectionsInput = {
     assignedInspections?: Prisma.InspectionUncheckedUpdateManyWithoutInspectorNestedInput;
     maintenanceLogs?: Prisma.MaintenanceLogUncheckedUpdateManyWithoutInspectorNestedInput;
     notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput;
+    ownedExtinguishers?: Prisma.FireExtinguisherUncheckedUpdateManyWithoutOwnerNestedInput;
 };
 export type UserUpsertWithoutAssignedInspectionsInput = {
     update: Prisma.XOR<Prisma.UserUpdateWithoutAssignedInspectionsInput, Prisma.UserUncheckedUpdateWithoutAssignedInspectionsInput>;
@@ -578,6 +686,7 @@ export type UserUpdateWithoutAssignedInspectionsInput = {
     scheduledInspections?: Prisma.InspectionUpdateManyWithoutScheduledByNestedInput;
     maintenanceLogs?: Prisma.MaintenanceLogUpdateManyWithoutInspectorNestedInput;
     notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput;
+    ownedExtinguishers?: Prisma.FireExtinguisherUpdateManyWithoutOwnerNestedInput;
 };
 export type UserUncheckedUpdateWithoutAssignedInspectionsInput = {
     id?: Prisma.StringFieldUpdateOperationsInput | string;
@@ -594,6 +703,7 @@ export type UserUncheckedUpdateWithoutAssignedInspectionsInput = {
     scheduledInspections?: Prisma.InspectionUncheckedUpdateManyWithoutScheduledByNestedInput;
     maintenanceLogs?: Prisma.MaintenanceLogUncheckedUpdateManyWithoutInspectorNestedInput;
     notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput;
+    ownedExtinguishers?: Prisma.FireExtinguisherUncheckedUpdateManyWithoutOwnerNestedInput;
 };
 export type UserCreateWithoutMaintenanceLogsInput = {
     id?: string;
@@ -610,6 +720,7 @@ export type UserCreateWithoutMaintenanceLogsInput = {
     scheduledInspections?: Prisma.InspectionCreateNestedManyWithoutScheduledByInput;
     assignedInspections?: Prisma.InspectionCreateNestedManyWithoutInspectorInput;
     notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput;
+    ownedExtinguishers?: Prisma.FireExtinguisherCreateNestedManyWithoutOwnerInput;
 };
 export type UserUncheckedCreateWithoutMaintenanceLogsInput = {
     id?: string;
@@ -626,6 +737,7 @@ export type UserUncheckedCreateWithoutMaintenanceLogsInput = {
     scheduledInspections?: Prisma.InspectionUncheckedCreateNestedManyWithoutScheduledByInput;
     assignedInspections?: Prisma.InspectionUncheckedCreateNestedManyWithoutInspectorInput;
     notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput;
+    ownedExtinguishers?: Prisma.FireExtinguisherUncheckedCreateNestedManyWithoutOwnerInput;
 };
 export type UserCreateOrConnectWithoutMaintenanceLogsInput = {
     where: Prisma.UserWhereUniqueInput;
@@ -655,6 +767,7 @@ export type UserUpdateWithoutMaintenanceLogsInput = {
     scheduledInspections?: Prisma.InspectionUpdateManyWithoutScheduledByNestedInput;
     assignedInspections?: Prisma.InspectionUpdateManyWithoutInspectorNestedInput;
     notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput;
+    ownedExtinguishers?: Prisma.FireExtinguisherUpdateManyWithoutOwnerNestedInput;
 };
 export type UserUncheckedUpdateWithoutMaintenanceLogsInput = {
     id?: Prisma.StringFieldUpdateOperationsInput | string;
@@ -671,6 +784,7 @@ export type UserUncheckedUpdateWithoutMaintenanceLogsInput = {
     scheduledInspections?: Prisma.InspectionUncheckedUpdateManyWithoutScheduledByNestedInput;
     assignedInspections?: Prisma.InspectionUncheckedUpdateManyWithoutInspectorNestedInput;
     notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput;
+    ownedExtinguishers?: Prisma.FireExtinguisherUncheckedUpdateManyWithoutOwnerNestedInput;
 };
 export type UserCreateWithoutNotificationsInput = {
     id?: string;
@@ -687,6 +801,7 @@ export type UserCreateWithoutNotificationsInput = {
     scheduledInspections?: Prisma.InspectionCreateNestedManyWithoutScheduledByInput;
     assignedInspections?: Prisma.InspectionCreateNestedManyWithoutInspectorInput;
     maintenanceLogs?: Prisma.MaintenanceLogCreateNestedManyWithoutInspectorInput;
+    ownedExtinguishers?: Prisma.FireExtinguisherCreateNestedManyWithoutOwnerInput;
 };
 export type UserUncheckedCreateWithoutNotificationsInput = {
     id?: string;
@@ -703,6 +818,7 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
     scheduledInspections?: Prisma.InspectionUncheckedCreateNestedManyWithoutScheduledByInput;
     assignedInspections?: Prisma.InspectionUncheckedCreateNestedManyWithoutInspectorInput;
     maintenanceLogs?: Prisma.MaintenanceLogUncheckedCreateNestedManyWithoutInspectorInput;
+    ownedExtinguishers?: Prisma.FireExtinguisherUncheckedCreateNestedManyWithoutOwnerInput;
 };
 export type UserCreateOrConnectWithoutNotificationsInput = {
     where: Prisma.UserWhereUniqueInput;
@@ -732,6 +848,7 @@ export type UserUpdateWithoutNotificationsInput = {
     scheduledInspections?: Prisma.InspectionUpdateManyWithoutScheduledByNestedInput;
     assignedInspections?: Prisma.InspectionUpdateManyWithoutInspectorNestedInput;
     maintenanceLogs?: Prisma.MaintenanceLogUpdateManyWithoutInspectorNestedInput;
+    ownedExtinguishers?: Prisma.FireExtinguisherUpdateManyWithoutOwnerNestedInput;
 };
 export type UserUncheckedUpdateWithoutNotificationsInput = {
     id?: Prisma.StringFieldUpdateOperationsInput | string;
@@ -748,18 +865,21 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
     scheduledInspections?: Prisma.InspectionUncheckedUpdateManyWithoutScheduledByNestedInput;
     assignedInspections?: Prisma.InspectionUncheckedUpdateManyWithoutInspectorNestedInput;
     maintenanceLogs?: Prisma.MaintenanceLogUncheckedUpdateManyWithoutInspectorNestedInput;
+    ownedExtinguishers?: Prisma.FireExtinguisherUncheckedUpdateManyWithoutOwnerNestedInput;
 };
 export type UserCountOutputType = {
     scheduledInspections: number;
     assignedInspections: number;
     maintenanceLogs: number;
     notifications: number;
+    ownedExtinguishers: number;
 };
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
     scheduledInspections?: boolean | UserCountOutputTypeCountScheduledInspectionsArgs;
     assignedInspections?: boolean | UserCountOutputTypeCountAssignedInspectionsArgs;
     maintenanceLogs?: boolean | UserCountOutputTypeCountMaintenanceLogsArgs;
     notifications?: boolean | UserCountOutputTypeCountNotificationsArgs;
+    ownedExtinguishers?: boolean | UserCountOutputTypeCountOwnedExtinguishersArgs;
 };
 export type UserCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
     select?: Prisma.UserCountOutputTypeSelect<ExtArgs> | null;
@@ -775,6 +895,9 @@ export type UserCountOutputTypeCountMaintenanceLogsArgs<ExtArgs extends runtime.
 };
 export type UserCountOutputTypeCountNotificationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
     where?: Prisma.NotificationWhereInput;
+};
+export type UserCountOutputTypeCountOwnedExtinguishersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+    where?: Prisma.FireExtinguisherWhereInput;
 };
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
     id?: boolean;
@@ -792,6 +915,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
     assignedInspections?: boolean | Prisma.User$assignedInspectionsArgs<ExtArgs>;
     maintenanceLogs?: boolean | Prisma.User$maintenanceLogsArgs<ExtArgs>;
     notifications?: boolean | Prisma.User$notificationsArgs<ExtArgs>;
+    ownedExtinguishers?: boolean | Prisma.User$ownedExtinguishersArgs<ExtArgs>;
     _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>;
 }, ExtArgs["result"]["user"]>;
 export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -839,6 +963,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
     assignedInspections?: boolean | Prisma.User$assignedInspectionsArgs<ExtArgs>;
     maintenanceLogs?: boolean | Prisma.User$maintenanceLogsArgs<ExtArgs>;
     notifications?: boolean | Prisma.User$notificationsArgs<ExtArgs>;
+    ownedExtinguishers?: boolean | Prisma.User$ownedExtinguishersArgs<ExtArgs>;
     _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>;
 };
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {};
@@ -850,6 +975,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
         assignedInspections: Prisma.$InspectionPayload<ExtArgs>[];
         maintenanceLogs: Prisma.$MaintenanceLogPayload<ExtArgs>[];
         notifications: Prisma.$NotificationPayload<ExtArgs>[];
+        ownedExtinguishers: Prisma.$FireExtinguisherPayload<ExtArgs>[];
     };
     scalars: runtime.Types.Extensions.GetPayloadResult<{
         id: string;
@@ -919,6 +1045,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
     assignedInspections<T extends Prisma.User$assignedInspectionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$assignedInspectionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$InspectionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>;
     maintenanceLogs<T extends Prisma.User$maintenanceLogsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$maintenanceLogsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MaintenanceLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>;
     notifications<T extends Prisma.User$notificationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$notificationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NotificationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>;
+    ownedExtinguishers<T extends Prisma.User$ownedExtinguishersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$ownedExtinguishersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$FireExtinguisherPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>;
     then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): runtime.Types.Utils.JsPromise<TResult1 | TResult2>;
     catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): runtime.Types.Utils.JsPromise<T | TResult>;
     finally(onfinally?: (() => void) | undefined | null): runtime.Types.Utils.JsPromise<T>;
@@ -1077,6 +1204,17 @@ export type User$notificationsArgs<ExtArgs extends runtime.Types.Extensions.Inte
     take?: number;
     skip?: number;
     distinct?: Prisma.NotificationScalarFieldEnum | Prisma.NotificationScalarFieldEnum[];
+};
+export type User$ownedExtinguishersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+    select?: Prisma.FireExtinguisherSelect<ExtArgs> | null;
+    omit?: Prisma.FireExtinguisherOmit<ExtArgs> | null;
+    include?: Prisma.FireExtinguisherInclude<ExtArgs> | null;
+    where?: Prisma.FireExtinguisherWhereInput;
+    orderBy?: Prisma.FireExtinguisherOrderByWithRelationInput | Prisma.FireExtinguisherOrderByWithRelationInput[];
+    cursor?: Prisma.FireExtinguisherWhereUniqueInput;
+    take?: number;
+    skip?: number;
+    distinct?: Prisma.FireExtinguisherScalarFieldEnum | Prisma.FireExtinguisherScalarFieldEnum[];
 };
 export type UserDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
     select?: Prisma.UserSelect<ExtArgs> | null;

@@ -10,22 +10,22 @@ export declare class UsersService {
     getById(id: string): Promise<{
         id: string;
         email: string;
+        createdAt: Date;
+        updatedAt: Date;
         firstName: string;
         lastName: string;
         role: Role;
         isActive: boolean;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
     updateProfile(id: string, dto: UpdateProfileDto): Promise<{
         id: string;
         email: string;
+        createdAt: Date;
+        updatedAt: Date;
         firstName: string;
         lastName: string;
         role: Role;
         isActive: boolean;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
     changePassword(id: string, dto: ChangePasswordDto): Promise<{
         message: string;
@@ -34,22 +34,22 @@ export declare class UsersService {
     updateRole(id: string, role: Role): Promise<{
         id: string;
         email: string;
+        createdAt: Date;
+        updatedAt: Date;
         firstName: string;
         lastName: string;
         role: Role;
         isActive: boolean;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
     updateStatus(id: string, isActive: boolean): Promise<{
         id: string;
         email: string;
+        createdAt: Date;
+        updatedAt: Date;
         firstName: string;
         lastName: string;
         role: Role;
         isActive: boolean;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
     remove(id: string, currentUserId: string): Promise<{
         message: string;

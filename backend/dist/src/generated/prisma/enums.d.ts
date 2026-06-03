@@ -19,6 +19,8 @@ export declare const ExtinguisherStatus: {
 };
 export type ExtinguisherStatus = (typeof ExtinguisherStatus)[keyof typeof ExtinguisherStatus];
 export declare const InspectionStatus: {
+    readonly PENDING: "PENDING";
+    readonly APPROVED: "APPROVED";
     readonly SCHEDULED: "SCHEDULED";
     readonly IN_PROGRESS: "IN_PROGRESS";
     readonly COMPLETED: "COMPLETED";

@@ -18,28 +18,15 @@ export declare class MaintenanceController {
     } & {
         id: string;
         createdAt: Date;
-        actionDate: Date;
         extinguisherId: string;
         inspectorId: string;
+        inspectionId: string | null;
         actionsTaken: string;
         conditionNoted: import("../common/prisma-enums.js").MaintenanceCondition;
-        inspectionId: string | null;
+        actionDate: Date;
     }>;
     findAll(query: QueryMaintenanceDto): Promise<import("../common/dto/pagination.dto.js").PaginatedResult<unknown>>;
     findOne(id: string): Promise<{
-        inspection: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            result: string | null;
-            status: import("../common/prisma-enums.js").InspectionStatus;
-            scheduledAt: Date;
-            extinguisherId: string;
-            notes: string | null;
-            completedAt: Date | null;
-            scheduledById: string;
-            inspectorId: string | null;
-        } | null;
         extinguisher: {
             id: string;
             serialNumber: string;
@@ -50,14 +37,27 @@ export declare class MaintenanceController {
             firstName: string;
             lastName: string;
         };
+        inspection: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            status: import("../common/prisma-enums.js").InspectionStatus;
+            extinguisherId: string;
+            notes: string | null;
+            scheduledById: string;
+            inspectorId: string | null;
+            scheduledAt: Date;
+            result: string | null;
+            completedAt: Date | null;
+        } | null;
     } & {
         id: string;
         createdAt: Date;
-        actionDate: Date;
         extinguisherId: string;
         inspectorId: string;
+        inspectionId: string | null;
         actionsTaken: string;
         conditionNoted: import("../common/prisma-enums.js").MaintenanceCondition;
-        inspectionId: string | null;
+        actionDate: Date;
     }>;
 }

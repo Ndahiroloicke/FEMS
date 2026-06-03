@@ -227,12 +227,14 @@ export interface FireExtinguisherDetail extends FireExtinguisher {
 }
 
 export type InspectionStatus =
+  | "PENDING"
   | "SCHEDULED"
   | "IN_PROGRESS"
   | "COMPLETED"
   | "CANCELLED"
   | "OVERDUE";
 export const INSPECTION_STATUSES: InspectionStatus[] = [
+  "PENDING",
   "SCHEDULED",
   "IN_PROGRESS",
   "COMPLETED",

@@ -94,6 +94,7 @@ exports.FireExtinguisherScalarFieldEnum = {
     installationDate: 'installationDate',
     expiryDate: 'expiryDate',
     status: 'status',
+    ownerId: 'ownerId',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
 };

@@ -19,10 +19,10 @@ export declare class NotificationsService {
         type: NotificationType;
         channel: NotificationChannel;
         message: string;
-        isRead: boolean;
         sentAt: Date;
-        userId: string;
         extinguisherId: string | null;
+        userId: string;
+        isRead: boolean;
     }>;
     notifyAdmins(input: Omit<CreateNotificationInput, 'userId'>): Promise<void>;
     findForUser(userId: string, page?: number, limit?: number, isRead?: boolean): Promise<PaginatedResult<unknown>>;
@@ -31,10 +31,10 @@ export declare class NotificationsService {
         type: NotificationType;
         channel: NotificationChannel;
         message: string;
-        isRead: boolean;
         sentAt: Date;
-        userId: string;
         extinguisherId: string | null;
+        userId: string;
+        isRead: boolean;
     }>;
     markAllRead(userId: string): Promise<{
         updated: number;

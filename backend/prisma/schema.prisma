@@ -29,6 +29,8 @@ enum ExtinguisherStatus {
 }
 
 enum InspectionStatus {
+  PENDING
+  APPROVED
   SCHEDULED
   IN_PROGRESS
   COMPLETED
@@ -73,6 +75,7 @@ model User {
   assignedInspections Inspection[] @relation("Inspector")
   maintenanceLogs MaintenanceLog[]
   notifications Notification[]
+  ownedExtinguishers FireExtinguisher[] @relation("OwnedExtinguishers")
   @@map("users")
 }
 
@@ -85,6 +88,8 @@ model FireExtinguisher {
   installationDate DateTime
   expiryDate DateTime
   status ExtinguisherStatus @default(ACTIVE)
+  ownerId String?
+  owner User? @relation("OwnedExtinguishers", fields: [ownerId], references: [id], onDelete: SetNull)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   inspections Inspection[]

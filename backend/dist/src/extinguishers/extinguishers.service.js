@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ExtinguishersService = void 0;
 const common_1 = require("@nestjs/common");
 const pagination_dto_js_1 = require("../common/dto/pagination.dto.js");
+const prisma_enums_js_1 = require("../common/prisma-enums.js");
 const prisma_service_js_1 = require("../prisma/prisma.service.js");
 let ExtinguishersService = class ExtinguishersService {
     constructor(prisma) {
@@ -44,9 +45,11 @@ let ExtinguishersService = class ExtinguishersService {
             },
         });
     }
-    async findAll(query) {
+    async findAll(query, currentUser) {
         const { skip, take, page, limit } = (0, pagination_dto_js_1.getSkipTake)(query.page, query.limit);
+        const ownerFilter = currentUser.role === prisma_enums_js_1.Role.USER ? { ownerId: currentUser.id } : {};
         const where = {
+            ...ownerFilter,
             ...(query.status ? { status: query.status } : {}),
             ...(query.type ? { type: query.type } : {}),
             ...(query.search
@@ -79,7 +82,7 @@ let ExtinguishersService = class ExtinguishersService {
         ]);
         return { data, meta: (0, pagination_dto_js_1.buildPaginationMeta)(total, page, limit) };
     }
-    async findOne(id) {
+    async findOne(id, currentUser) {
         const extinguisher = await this.prisma.fireExtinguisher.findUnique({
             where: { id },
             include: {
@@ -105,6 +108,10 @@ let ExtinguishersService = class ExtinguishersService {
         });
         if (!extinguisher) {
             throw new common_1.NotFoundException(`Extinguisher ${id} not found`);
+        }
+        if (currentUser.role === prisma_enums_js_1.Role.USER &&
+            extinguisher.ownerId !== currentUser.id) {
+            throw new common_1.ForbiddenException('You do not have access to this extinguisher');
         }
         return extinguisher;
     }

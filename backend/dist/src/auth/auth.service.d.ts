@@ -15,12 +15,12 @@ export declare class AuthService {
         user: {
             id: string;
             email: string;
+            createdAt: Date;
+            updatedAt: Date;
             firstName: string;
             lastName: string;
             role: import("../common/prisma-enums.js").Role;
             isActive: boolean;
-            createdAt: Date;
-            updatedAt: Date;
         };
         accessToken: string;
     }>;

@@ -10,7 +10,6 @@ import {
   Select,
   EmptyState,
   ErrorState,
-  LoadingState,
 } from "@/components/ui/primitives";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -29,6 +28,24 @@ import { formatEnum, initials } from "@/lib/utils";
 
 const PAGE_SIZE = 10;
 
+function TableSkeleton() {
+  return (
+    <div className="divide-y divide-border">
+      {[...Array(5)].map((_, i) => (
+        <div key={i} className="flex items-center gap-4 px-6 py-4">
+          <div className="h-8 w-8 animate-pulse rounded-full bg-slate-100" />
+          <div className="space-y-1.5">
+            <div className="h-4 w-32 animate-pulse rounded bg-slate-100" />
+            <div className="h-3 w-40 animate-pulse rounded bg-slate-100" />
+          </div>
+          <div className="ml-auto h-6 w-20 animate-pulse rounded bg-slate-100" />
+          <div className="h-7 w-20 animate-pulse rounded bg-slate-100" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function UsersPage() {
   const { role, user: currentUser } = useAuth();
   const toast = useToast();
@@ -43,8 +60,12 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
+
   const [deleteTarget, setDeleteTarget] = useState<User | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  const [deactivateTarget, setDeactivateTarget] = useState<User | null>(null);
+  const [deactivating, setDeactivating] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -82,19 +103,21 @@ export default function UsersPage() {
     }
   }
 
-  async function toggleStatus(target: User) {
-    setBusyId(target.id);
-    const next = !(target.isActive ?? true);
+  async function handleToggleStatus() {
+    if (!deactivateTarget) return;
+    const next = !(deactivateTarget.isActive ?? true);
+    setDeactivating(true);
     try {
-      await api.users.setStatus(target.id, next);
+      await api.users.setStatus(deactivateTarget.id, next);
       setItems((prev) =>
-        prev.map((u) => (u.id === target.id ? { ...u, isActive: next } : u)),
+        prev.map((u) => (u.id === deactivateTarget.id ? { ...u, isActive: next } : u)),
       );
       toast.success(next ? "User activated" : "User deactivated");
+      setDeactivateTarget(null);
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Failed to update status");
     } finally {
-      setBusyId(null);
+      setDeactivating(false);
     }
   }
 
@@ -173,7 +196,7 @@ export default function UsersPage() {
         </div>
 
         {loading ? (
-          <LoadingState message="Loading users…" />
+          <TableSkeleton />
         ) : error ? (
           <ErrorState message={error} onRetry={load} />
         ) : items.length === 0 ? (
@@ -182,7 +205,7 @@ export default function UsersPage() {
           <>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-border bg-slate-50 text-xs uppercase tracking-wide text-muted">
+                <thead className="border-b border-border bg-slate-50 text-xs uppercase tracking-wide text-slate-400">
                   <tr>
                     <th className="px-6 py-3 font-medium">User</th>
                     <th className="px-6 py-3 font-medium">Role</th>
@@ -195,7 +218,7 @@ export default function UsersPage() {
                     const isSelf = u.id === currentUser?.id;
                     const active = u.isActive ?? true;
                     return (
-                      <tr key={u.id} className="hover:bg-slate-50/50">
+                      <tr key={u.id} className="transition-colors hover:bg-slate-50">
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white">
@@ -205,12 +228,12 @@ export default function UsersPage() {
                               <p className="font-medium text-slate-900">
                                 {u.firstName} {u.lastName}
                                 {isSelf && (
-                                  <span className="ml-2 text-xs font-normal text-muted">
+                                  <span className="ml-2 text-xs font-normal text-slate-400">
                                     (you)
                                   </span>
                                 )}
                               </p>
-                              <p className="text-xs text-muted">{u.email}</p>
+                              <p className="text-xs text-slate-400">{u.email}</p>
                             </div>
                           </div>
                         </td>
@@ -240,7 +263,7 @@ export default function UsersPage() {
                               variant="secondary"
                               className="px-2.5 py-1 text-xs"
                               disabled={isSelf || busyId === u.id}
-                              onClick={() => toggleStatus(u)}
+                              onClick={() => setDeactivateTarget(u)}
                             >
                               {active ? "Deactivate" : "Activate"}
                             </Button>
@@ -248,7 +271,7 @@ export default function UsersPage() {
                               type="button"
                               disabled={isSelf}
                               onClick={() => setDeleteTarget(u)}
-                              className="rounded-md p-1.5 text-red-500 hover:bg-red-50 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-40"
+                              className="rounded-md p-1.5 text-red-500 transition-colors hover:bg-red-50 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-40"
                               title="Delete"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -267,9 +290,30 @@ export default function UsersPage() {
       </Card>
 
       <ConfirmDialog
+        open={Boolean(deactivateTarget)}
+        title={
+          deactivateTarget && (deactivateTarget.isActive ?? true)
+            ? "Deactivate account?"
+            : "Activate account?"
+        }
+        message={
+          deactivateTarget && (deactivateTarget.isActive ?? true)
+            ? "The user will no longer be able to sign in."
+            : "The user will be able to sign in again."
+        }
+        confirmLabel={
+          deactivateTarget && (deactivateTarget.isActive ?? true) ? "Deactivate" : "Activate"
+        }
+        destructive={deactivateTarget ? (deactivateTarget.isActive ?? true) : false}
+        loading={deactivating}
+        onConfirm={handleToggleStatus}
+        onClose={() => setDeactivateTarget(null)}
+      />
+
+      <ConfirmDialog
         open={Boolean(deleteTarget)}
-        title="Delete user"
-        message={`Are you sure you want to delete ${deleteTarget?.firstName} ${deleteTarget?.lastName}? This action cannot be undone.`}
+        title="Remove user?"
+        message="This cannot be undone."
         confirmLabel="Delete"
         destructive
         loading={deleting}

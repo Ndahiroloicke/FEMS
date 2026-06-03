@@ -20,13 +20,15 @@ exports.CreateExtinguisherDto = CreateExtinguisherDto;
 __decorate([
     (0, swagger_1.ApiProperty)({ example: 'FE-2024-001234' }),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsNotEmpty)({ message: 'Serial number is required' }),
+    (0, class_validator_1.MinLength)(3, { message: 'Serial number must be at least 3 characters' }),
     __metadata("design:type", String)
 ], CreateExtinguisherDto.prototype, "serialNumber", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ example: 'Building A — Floor 2 Corridor' }),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsNotEmpty)({ message: 'Location is required' }),
+    (0, class_validator_1.MinLength)(3, { message: 'Location must be at least 3 characters' }),
     __metadata("design:type", String)
 ], CreateExtinguisherDto.prototype, "location", void 0);
 __decorate([

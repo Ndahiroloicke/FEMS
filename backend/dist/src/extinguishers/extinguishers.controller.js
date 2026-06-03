@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ExtinguishersController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
+const current_user_decorator_js_1 = require("../common/decorators/current-user.decorator.js");
 const roles_decorator_js_1 = require("../common/decorators/roles.decorator.js");
 const roles_guard_js_1 = require("../common/guards/roles.guard.js");
 const prisma_enums_js_1 = require("../common/prisma-enums.js");
@@ -29,11 +30,11 @@ let ExtinguishersController = class ExtinguishersController {
     create(dto) {
         return this.extinguishersService.create(dto);
     }
-    findAll(query) {
-        return this.extinguishersService.findAll(query);
+    findAll(query, user) {
+        return this.extinguishersService.findAll(query, user);
     }
-    findOne(id) {
-        return this.extinguishersService.findOne(id);
+    findOne(id, user) {
+        return this.extinguishersService.findOne(id, user);
     }
     update(id, dto) {
         return this.extinguishersService.update(id, dto);
@@ -54,18 +55,20 @@ __decorate([
 ], ExtinguishersController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
-    (0, swagger_1.ApiOperation)({ summary: 'List fire extinguishers (paginated)' }),
+    (0, swagger_1.ApiOperation)({ summary: 'List fire extinguishers (paginated); USER role only sees their own' }),
     __param(0, (0, common_1.Query)()),
+    __param(1, (0, current_user_decorator_js_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [query_extinguisher_dto_js_1.QueryExtinguisherDto]),
+    __metadata("design:paramtypes", [query_extinguisher_dto_js_1.QueryExtinguisherDto, Object]),
     __metadata("design:returntype", void 0)
 ], ExtinguishersController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
     (0, swagger_1.ApiOperation)({ summary: 'Get extinguisher details' }),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, current_user_decorator_js_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], ExtinguishersController.prototype, "findOne", null);
 __decorate([

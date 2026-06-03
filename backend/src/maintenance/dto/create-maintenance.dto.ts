@@ -6,6 +6,7 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  MinLength,
 } from 'class-validator';
 import { MaintenanceCondition } from '../../common/prisma-enums.js';
 
@@ -16,7 +17,8 @@ export class CreateMaintenanceDto {
 
   @ApiProperty({ example: 'Recharged cylinder and replaced safety pin' })
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Actions taken is required' })
+  @MinLength(10, { message: 'Actions taken must be at least 10 characters' })
   actionsTaken: string;
 
   @ApiProperty({ example: '2026-06-03T10:00:00.000Z' })

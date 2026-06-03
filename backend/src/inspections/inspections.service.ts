@@ -1,4 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import type { AuthUser } from '../common/decorators/current-user.decorator.js';
 import {
   buildPaginationMeta,
   getSkipTake,
@@ -28,13 +34,23 @@ export class InspectionsService {
     private readonly mailer: MailerService,
   ) {}
 
-  async create(dto: CreateInspectionDto, currentUserId: string) {
+  async create(dto: CreateInspectionDto, currentUser: AuthUser) {
     const extinguisher = await this.prisma.fireExtinguisher.findUnique({
       where: { id: dto.extinguisherId },
     });
     if (!extinguisher) {
       throw new NotFoundException(
         `Extinguisher ${dto.extinguisherId} not found`,
+      );
+    }
+
+    // USER role can only request inspections for extinguishers assigned to them
+    if (
+      currentUser.role === 'USER' &&
+      extinguisher.ownerId !== currentUser.id
+    ) {
+      throw new ForbiddenException(
+        'You can only request inspections for your own extinguishers',
       );
     }
 
@@ -47,13 +63,19 @@ export class InspectionsService {
       }
     }
 
+    // USER role creates a PENDING request; ADMIN/INSPECTOR create SCHEDULED directly
+    const initialStatus =
+      currentUser.role === 'USER'
+        ? InspectionStatus.PENDING
+        : InspectionStatus.SCHEDULED;
+
     const inspection = await this.prisma.inspection.create({
       data: {
         extinguisherId: dto.extinguisherId,
-        scheduledById: currentUserId,
+        scheduledById: currentUser.id,
         inspectorId: dto.inspectorId ?? null,
         scheduledAt: new Date(dto.scheduledAt),
-        status: InspectionStatus.SCHEDULED,
+        status: initialStatus,
         notes: dto.notes ?? null,
       },
       include: inspectionInclude,
@@ -84,10 +106,18 @@ export class InspectionsService {
     return inspection;
   }
 
-  async findAll(query: QueryInspectionDto): Promise<PaginatedResult<unknown>> {
+  async findAll(
+    query: QueryInspectionDto,
+    currentUser: AuthUser,
+  ): Promise<PaginatedResult<unknown>> {
     const { skip, take, page, limit } = getSkipTake(query.page, query.limit);
 
+    // USER role only sees their own inspection requests
+    const userFilter =
+      currentUser.role === 'USER' ? { scheduledById: currentUser.id } : {};
+
     const where = {
+      ...userFilter,
       ...(query.status ? { status: query.status } : {}),
       ...(query.extinguisherId ? { extinguisherId: query.extinguisherId } : {}),
       ...(query.inspectorId ? { inspectorId: query.inspectorId } : {}),
@@ -119,6 +149,27 @@ export class InspectionsService {
       throw new NotFoundException(`Inspection ${id} not found`);
     }
     return inspection;
+  }
+
+  async approve(id: string, dto: UpdateInspectionDto) {
+    const current = await this.prisma.inspection.findUnique({ where: { id } });
+    if (!current) {
+      throw new NotFoundException(`Inspection ${id} not found`);
+    }
+    if (current.status !== InspectionStatus.PENDING) {
+      throw new BadRequestException(
+        'Only PENDING inspection requests can be approved',
+      );
+    }
+    return this.prisma.inspection.update({
+      where: { id },
+      data: {
+        status: InspectionStatus.SCHEDULED,
+        inspectorId: dto.inspectorId ?? current.inspectorId,
+        notes: dto.notes ?? current.notes,
+      },
+      include: inspectionInclude,
+    });
   }
 
   async update(id: string, dto: UpdateInspectionDto) {

@@ -95,11 +95,13 @@ export function Modal({
 export function Textarea({
   label,
   hint,
+  error,
   className,
   ...props
 }: React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
   label?: string;
   hint?: string;
+  error?: string;
 }) {
   return (
     <label className="block">
@@ -107,11 +109,13 @@ export function Textarea({
       <textarea
         className={cn(
           "min-h-[100px] w-full resize-y rounded-md border border-border bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-200",
+          error && "border-red-400",
           className,
         )}
         {...props}
       />
-      {hint && <span className="mt-1.5 block text-xs text-muted">{hint}</span>}
+      {error && <span className="mt-1 block text-xs text-red-600">{error}</span>}
+      {hint && !error && <span className="mt-1.5 block text-xs text-muted">{hint}</span>}
     </label>
   );
 }

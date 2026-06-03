@@ -14,6 +14,7 @@ const extinguisherStyles: Record<ExtinguisherStatus, string> = {
 };
 
 const inspectionStyles: Record<InspectionStatus, string> = {
+  PENDING: "bg-amber-50 text-amber-800 border-amber-200",
   SCHEDULED: "bg-blue-50 text-blue-800 border-blue-200",
   IN_PROGRESS: "bg-blue-50 text-blue-800 border-blue-200",
   COMPLETED: "bg-green-50 text-green-800 border-green-200",

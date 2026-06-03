@@ -27,14 +27,17 @@ let InspectionsController = class InspectionsController {
     constructor(inspectionsService) {
         this.inspectionsService = inspectionsService;
     }
-    create(dto, userId) {
-        return this.inspectionsService.create(dto, userId);
+    create(dto, user) {
+        return this.inspectionsService.create(dto, user);
     }
-    findAll(query) {
-        return this.inspectionsService.findAll(query);
+    findAll(query, user) {
+        return this.inspectionsService.findAll(query, user);
     }
     findOne(id) {
         return this.inspectionsService.findOne(id);
+    }
+    approve(id, dto) {
+        return this.inspectionsService.approve(id, dto);
     }
     update(id, dto) {
         return this.inspectionsService.update(id, dto);
@@ -46,19 +49,22 @@ let InspectionsController = class InspectionsController {
 exports.InspectionsController = InspectionsController;
 __decorate([
     (0, common_1.Post)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Schedule an inspection' }),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Create inspection. ADMIN/INSPECTOR → SCHEDULED. USER → PENDING request.',
+    }),
     __param(0, (0, common_1.Body)()),
-    __param(1, (0, current_user_decorator_js_1.CurrentUser)('id')),
+    __param(1, (0, current_user_decorator_js_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_inspection_dto_js_1.CreateInspectionDto, String]),
+    __metadata("design:paramtypes", [create_inspection_dto_js_1.CreateInspectionDto, Object]),
     __metadata("design:returntype", void 0)
 ], InspectionsController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
-    (0, swagger_1.ApiOperation)({ summary: 'List inspections (paginated)' }),
+    (0, swagger_1.ApiOperation)({ summary: 'List inspections (paginated); USER sees only their requests' }),
     __param(0, (0, common_1.Query)()),
+    __param(1, (0, current_user_decorator_js_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [query_inspection_dto_js_1.QueryInspectionDto]),
+    __metadata("design:paramtypes", [query_inspection_dto_js_1.QueryInspectionDto, Object]),
     __metadata("design:returntype", void 0)
 ], InspectionsController.prototype, "findAll", null);
 __decorate([
@@ -70,9 +76,19 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], InspectionsController.prototype, "findOne", null);
 __decorate([
+    (0, common_1.Patch)(':id/approve'),
+    (0, roles_decorator_js_1.Roles)(prisma_enums_js_1.Role.ADMIN, prisma_enums_js_1.Role.INSPECTOR),
+    (0, swagger_1.ApiOperation)({ summary: 'Approve a PENDING inspection request (ADMIN/INSPECTOR)' }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, update_inspection_dto_js_1.UpdateInspectionDto]),
+    __metadata("design:returntype", void 0)
+], InspectionsController.prototype, "approve", null);
+__decorate([
     (0, common_1.Patch)(':id'),
     (0, roles_decorator_js_1.Roles)(prisma_enums_js_1.Role.ADMIN, prisma_enums_js_1.Role.INSPECTOR),
-    (0, swagger_1.ApiOperation)({ summary: 'Update an inspection' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Update an inspection (ADMIN/INSPECTOR)' }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),

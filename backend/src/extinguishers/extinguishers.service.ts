@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -9,6 +10,8 @@ import {
   getSkipTake,
   type PaginatedResult,
 } from '../common/dto/pagination.dto.js';
+import type { AuthUser } from '../common/decorators/current-user.decorator.js';
+import { Role } from '../common/prisma-enums.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateExtinguisherDto } from './dto/create-extinguisher.dto.js';
 import { QueryExtinguisherDto } from './dto/query-extinguisher.dto.js';
@@ -55,10 +58,15 @@ export class ExtinguishersService {
 
   async findAll(
     query: QueryExtinguisherDto,
+    currentUser: AuthUser,
   ): Promise<PaginatedResult<unknown>> {
     const { skip, take, page, limit } = getSkipTake(query.page, query.limit);
 
+    const ownerFilter =
+      currentUser.role === Role.USER ? { ownerId: currentUser.id } : {};
+
     const where = {
+      ...ownerFilter,
       ...(query.status ? { status: query.status } : {}),
       ...(query.type ? { type: query.type } : {}),
       ...(query.search
@@ -94,7 +102,7 @@ export class ExtinguishersService {
     return { data, meta: buildPaginationMeta(total, page, limit) };
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, currentUser: AuthUser) {
     const extinguisher = await this.prisma.fireExtinguisher.findUnique({
       where: { id },
       include: {
@@ -121,6 +129,15 @@ export class ExtinguishersService {
 
     if (!extinguisher) {
       throw new NotFoundException(`Extinguisher ${id} not found`);
+    }
+
+    if (
+      currentUser.role === Role.USER &&
+      extinguisher.ownerId !== currentUser.id
+    ) {
+      throw new ForbiddenException(
+        'You do not have access to this extinguisher',
+      );
     }
 
     return extinguisher;

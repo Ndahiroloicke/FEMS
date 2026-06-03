@@ -6,6 +6,7 @@ import { LogOut, Menu, X } from "lucide-react";
 import { Sidebar } from "./sidebar";
 import { useAuth } from "@/components/providers/auth-provider";
 import { LoadingState } from "@/components/ui/primitives";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { initials } from "@/lib/utils";
 import { cn } from "@/lib/utils";
@@ -14,6 +15,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, loading, isAuthenticated, logout } = useAuth();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [logoutOpen, setLogoutOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -22,8 +25,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, [loading, isAuthenticated, router]);
 
   async function handleLogout() {
-    await logout();
-    router.replace("/login");
+    setLoggingOut(true);
+    try {
+      await logout();
+      router.replace("/login");
+    } finally {
+      setLoggingOut(false);
+      setLogoutOpen(false);
+    }
   }
 
   if (loading) {
@@ -80,7 +89,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <p className="text-sm font-medium text-slate-900">
                 {user.firstName} {user.lastName}
               </p>
-              <p className="text-xs text-muted">{user.email}</p>
+              <p className="text-xs text-slate-400">{user.email}</p>
             </div>
             <span
               className={cn(
@@ -93,7 +102,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <StatusBadge status={user.role} kind="role" />
             <button
               type="button"
-              onClick={handleLogout}
+              onClick={() => setLogoutOpen(true)}
               className="inline-flex items-center gap-1.5 rounded-md border border-border bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
             >
               <LogOut className="h-4 w-4" />
@@ -104,6 +113,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
+
+      <ConfirmDialog
+        open={logoutOpen}
+        title="Sign out?"
+        message="You will be signed out of your session."
+        confirmLabel="Sign out"
+        loading={loggingOut}
+        onConfirm={handleLogout}
+        onClose={() => setLogoutOpen(false)}
+      />
     </div>
   );
 }

@@ -18,13 +18,18 @@ exports.ResetPasswordDto = ResetPasswordDto;
 __decorate([
     (0, swagger_1.ApiProperty)({ example: 'a1b2c3d4-reset-token' }),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsNotEmpty)({ message: 'Reset token is required' }),
     __metadata("design:type", String)
 ], ResetPasswordDto.prototype, "token", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ example: 'NewPassword@123', minLength: 8 }),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.MinLength)(8),
+    (0, class_validator_1.MinLength)(8, { message: 'Password must be at least 8 characters' }),
+    (0, class_validator_1.MaxLength)(128),
+    (0, class_validator_1.Matches)(/(?=.*[A-Z])/, {
+        message: 'Password must contain at least one uppercase letter',
+    }),
+    (0, class_validator_1.Matches)(/(?=.*\d)/, { message: 'Password must contain at least one number' }),
     __metadata("design:type", String)
 ], ResetPasswordDto.prototype, "newPassword", void 0);
 //# sourceMappingURL=reset-password.dto.js.map

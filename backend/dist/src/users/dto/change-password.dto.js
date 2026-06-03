@@ -18,13 +18,20 @@ exports.ChangePasswordDto = ChangePasswordDto;
 __decorate([
     (0, swagger_1.ApiProperty)({ example: 'Password@123' }),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsNotEmpty)({ message: 'Current password is required' }),
     __metadata("design:type", String)
 ], ChangePasswordDto.prototype, "currentPassword", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ example: 'NewPassword@123', minLength: 8 }),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.MinLength)(8),
+    (0, class_validator_1.MinLength)(8, { message: 'Password must be at least 8 characters' }),
+    (0, class_validator_1.MaxLength)(128),
+    (0, class_validator_1.Matches)(/(?=.*[A-Z])/, {
+        message: 'Password must contain at least one uppercase letter',
+    }),
+    (0, class_validator_1.Matches)(/(?=.*\d)/, {
+        message: 'Password must contain at least one number',
+    }),
     __metadata("design:type", String)
 ], ChangePasswordDto.prototype, "newPassword", void 0);
 //# sourceMappingURL=change-password.dto.js.map

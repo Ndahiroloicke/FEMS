@@ -101,8 +101,8 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
               className={cn(
                 "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
                 active
-                  ? "bg-slate-100 text-slate-900"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
+                  ? "border-l-2 border-slate-900 bg-slate-100 pl-[10px] text-slate-900"
+                  : "border-l-2 border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900",
               )}
             >
               <Icon className="h-4 w-4 shrink-0" />

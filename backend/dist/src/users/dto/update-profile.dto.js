@@ -19,7 +19,8 @@ __decorate([
     (0, swagger_1.ApiPropertyOptional)({ example: 'Jane' }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsNotEmpty)({ message: 'First name cannot be blank' }),
+    (0, class_validator_1.MinLength)(2, { message: 'First name must be at least 2 characters' }),
     (0, class_validator_1.MaxLength)(100),
     __metadata("design:type", String)
 ], UpdateProfileDto.prototype, "firstName", void 0);
@@ -27,14 +28,16 @@ __decorate([
     (0, swagger_1.ApiPropertyOptional)({ example: 'Doe' }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsNotEmpty)({ message: 'Last name cannot be blank' }),
+    (0, class_validator_1.MinLength)(2, { message: 'Last name must be at least 2 characters' }),
     (0, class_validator_1.MaxLength)(100),
     __metadata("design:type", String)
 ], UpdateProfileDto.prototype, "lastName", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({ example: 'jane.doe@example.com' }),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsEmail)(),
+    (0, class_validator_1.IsEmail)({}, { message: 'Please enter a valid email address' }),
+    (0, class_validator_1.MaxLength)(255),
     __metadata("design:type", String)
 ], UpdateProfileDto.prototype, "email", void 0);
 //# sourceMappingURL=update-profile.dto.js.map

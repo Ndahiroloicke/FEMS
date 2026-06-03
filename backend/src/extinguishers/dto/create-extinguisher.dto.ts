@@ -6,6 +6,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  MinLength,
 } from 'class-validator';
 import {
   ExtinguisherStatus,
@@ -18,12 +19,14 @@ export type ExtinguisherSize = (typeof EXTINGUISHER_SIZES)[number];
 export class CreateExtinguisherDto {
   @ApiProperty({ example: 'FE-2024-001234' })
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Serial number is required' })
+  @MinLength(3, { message: 'Serial number must be at least 3 characters' })
   serialNumber: string;
 
   @ApiProperty({ example: 'Building A — Floor 2 Corridor' })
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Location is required' })
+  @MinLength(3, { message: 'Location must be at least 3 characters' })
   location: string;
 
   @ApiProperty({ enum: ExtinguisherType, example: ExtinguisherType.CO2 })

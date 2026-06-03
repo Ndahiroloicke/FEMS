@@ -7,6 +7,13 @@ import { Card, Button, Input, Alert, LoadingState } from "@/components/ui/primit
 import { useToast } from "@/components/providers/toast-provider";
 import { api, ApiError } from "@/lib/api";
 
+const PASSWORD_STRENGTH_RE = /(?=.*[A-Z])(?=.*\d)/;
+
+interface FieldErrors {
+  newPassword?: string;
+  confirmPassword?: string;
+}
+
 function ResetPasswordForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -15,24 +22,25 @@ function ResetPasswordForm() {
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [fieldError, setFieldError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  function validate(): boolean {
+    const next: FieldErrors = {};
+    if (!password) next.newPassword = "Password is required";
+    else if (password.length < 8) next.newPassword = "Password must be at least 8 characters";
+    else if (!PASSWORD_STRENGTH_RE.test(password))
+      next.newPassword = "Must contain at least 1 uppercase letter and 1 number";
+    if (confirmPassword !== password) next.confirmPassword = "Passwords do not match";
+    setFieldErrors(next);
+    return Object.keys(next).length === 0;
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError("");
-    setFieldError("");
-
-    if (password.length < 8) {
-      setFieldError("Password must be at least 8 characters");
-      return;
-    }
-    if (password !== confirmPassword) {
-      setFieldError("Passwords do not match");
-      return;
-    }
-
+    if (!validate()) return;
     setSubmitting(true);
     try {
       await api.auth.resetPassword(token, password);
@@ -52,7 +60,7 @@ function ResetPasswordForm() {
       <Card className="p-8">
         <h1 className="text-xl font-semibold text-slate-900">Reset password</h1>
         <Alert message="This reset link is invalid or has expired." />
-        <p className="mt-4 text-center text-sm text-muted">
+        <p className="mt-4 text-center text-sm text-slate-500">
           <Link href="/forgot-password" className="font-medium text-slate-900 hover:underline">
             Request a new link
           </Link>
@@ -64,7 +72,7 @@ function ResetPasswordForm() {
   return (
     <Card className="p-8">
       <h1 className="text-xl font-semibold text-slate-900">Reset password</h1>
-      <p className="mt-1 text-sm text-muted">Choose a new password for your account.</p>
+      <p className="mt-1 text-sm text-slate-500">Choose a new password for your account.</p>
 
       {error && <Alert message={error} />}
 
@@ -73,26 +81,32 @@ function ResetPasswordForm() {
           label="New password"
           type="password"
           autoComplete="new-password"
-          required
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="At least 8 characters"
+          error={fieldErrors.newPassword}
+          onChange={(e) => {
+            setPassword(e.target.value);
+            if (fieldErrors.newPassword) setFieldErrors((p) => ({ ...p, newPassword: undefined }));
+          }}
+          placeholder="Min 8 chars, 1 uppercase, 1 number"
         />
         <Input
           label="Confirm new password"
           type="password"
           autoComplete="new-password"
-          required
           value={confirmPassword}
-          error={fieldError}
-          onChange={(e) => setConfirmPassword(e.target.value)}
+          error={fieldErrors.confirmPassword}
+          onChange={(e) => {
+            setConfirmPassword(e.target.value);
+            if (fieldErrors.confirmPassword)
+              setFieldErrors((p) => ({ ...p, confirmPassword: undefined }));
+          }}
         />
-        <Button type="submit" className="w-full" loading={submitting}>
+        <Button type="submit" className="w-full" loading={submitting} disabled={submitting}>
           Reset password
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-muted">
+      <p className="mt-6 text-center text-sm text-slate-500">
         <Link href="/login" className="font-medium text-slate-900 hover:underline">
           Back to sign in
         </Link>

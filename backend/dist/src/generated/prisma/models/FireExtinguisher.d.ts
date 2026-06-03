@@ -16,6 +16,7 @@ export type FireExtinguisherMinAggregateOutputType = {
     installationDate: Date | null;
     expiryDate: Date | null;
     status: $Enums.ExtinguisherStatus | null;
+    ownerId: string | null;
     createdAt: Date | null;
     updatedAt: Date | null;
 };
@@ -28,6 +29,7 @@ export type FireExtinguisherMaxAggregateOutputType = {
     installationDate: Date | null;
     expiryDate: Date | null;
     status: $Enums.ExtinguisherStatus | null;
+    ownerId: string | null;
     createdAt: Date | null;
     updatedAt: Date | null;
 };
@@ -40,6 +42,7 @@ export type FireExtinguisherCountAggregateOutputType = {
     installationDate: number;
     expiryDate: number;
     status: number;
+    ownerId: number;
     createdAt: number;
     updatedAt: number;
     _all: number;
@@ -53,6 +56,7 @@ export type FireExtinguisherMinAggregateInputType = {
     installationDate?: true;
     expiryDate?: true;
     status?: true;
+    ownerId?: true;
     createdAt?: true;
     updatedAt?: true;
 };
@@ -65,6 +69,7 @@ export type FireExtinguisherMaxAggregateInputType = {
     installationDate?: true;
     expiryDate?: true;
     status?: true;
+    ownerId?: true;
     createdAt?: true;
     updatedAt?: true;
 };
@@ -77,6 +82,7 @@ export type FireExtinguisherCountAggregateInputType = {
     installationDate?: true;
     expiryDate?: true;
     status?: true;
+    ownerId?: true;
     createdAt?: true;
     updatedAt?: true;
     _all?: true;
@@ -114,6 +120,7 @@ export type FireExtinguisherGroupByOutputType = {
     installationDate: Date;
     expiryDate: Date;
     status: $Enums.ExtinguisherStatus;
+    ownerId: string | null;
     createdAt: Date;
     updatedAt: Date;
     _count: FireExtinguisherCountAggregateOutputType | null;
@@ -135,8 +142,10 @@ export type FireExtinguisherWhereInput = {
     installationDate?: Prisma.DateTimeFilter<"FireExtinguisher"> | Date | string;
     expiryDate?: Prisma.DateTimeFilter<"FireExtinguisher"> | Date | string;
     status?: Prisma.EnumExtinguisherStatusFilter<"FireExtinguisher"> | $Enums.ExtinguisherStatus;
+    ownerId?: Prisma.StringNullableFilter<"FireExtinguisher"> | string | null;
     createdAt?: Prisma.DateTimeFilter<"FireExtinguisher"> | Date | string;
     updatedAt?: Prisma.DateTimeFilter<"FireExtinguisher"> | Date | string;
+    owner?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null;
     inspections?: Prisma.InspectionListRelationFilter;
     maintenanceLogs?: Prisma.MaintenanceLogListRelationFilter;
     notifications?: Prisma.NotificationListRelationFilter;
@@ -150,8 +159,10 @@ export type FireExtinguisherOrderByWithRelationInput = {
     installationDate?: Prisma.SortOrder;
     expiryDate?: Prisma.SortOrder;
     status?: Prisma.SortOrder;
+    ownerId?: Prisma.SortOrderInput | Prisma.SortOrder;
     createdAt?: Prisma.SortOrder;
     updatedAt?: Prisma.SortOrder;
+    owner?: Prisma.UserOrderByWithRelationInput;
     inspections?: Prisma.InspectionOrderByRelationAggregateInput;
     maintenanceLogs?: Prisma.MaintenanceLogOrderByRelationAggregateInput;
     notifications?: Prisma.NotificationOrderByRelationAggregateInput;
@@ -168,8 +179,10 @@ export type FireExtinguisherWhereUniqueInput = Prisma.AtLeast<{
     installationDate?: Prisma.DateTimeFilter<"FireExtinguisher"> | Date | string;
     expiryDate?: Prisma.DateTimeFilter<"FireExtinguisher"> | Date | string;
     status?: Prisma.EnumExtinguisherStatusFilter<"FireExtinguisher"> | $Enums.ExtinguisherStatus;
+    ownerId?: Prisma.StringNullableFilter<"FireExtinguisher"> | string | null;
     createdAt?: Prisma.DateTimeFilter<"FireExtinguisher"> | Date | string;
     updatedAt?: Prisma.DateTimeFilter<"FireExtinguisher"> | Date | string;
+    owner?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null;
     inspections?: Prisma.InspectionListRelationFilter;
     maintenanceLogs?: Prisma.MaintenanceLogListRelationFilter;
     notifications?: Prisma.NotificationListRelationFilter;
@@ -183,6 +196,7 @@ export type FireExtinguisherOrderByWithAggregationInput = {
     installationDate?: Prisma.SortOrder;
     expiryDate?: Prisma.SortOrder;
     status?: Prisma.SortOrder;
+    ownerId?: Prisma.SortOrderInput | Prisma.SortOrder;
     createdAt?: Prisma.SortOrder;
     updatedAt?: Prisma.SortOrder;
     _count?: Prisma.FireExtinguisherCountOrderByAggregateInput;
@@ -201,6 +215,7 @@ export type FireExtinguisherScalarWhereWithAggregatesInput = {
     installationDate?: Prisma.DateTimeWithAggregatesFilter<"FireExtinguisher"> | Date | string;
     expiryDate?: Prisma.DateTimeWithAggregatesFilter<"FireExtinguisher"> | Date | string;
     status?: Prisma.EnumExtinguisherStatusWithAggregatesFilter<"FireExtinguisher"> | $Enums.ExtinguisherStatus;
+    ownerId?: Prisma.StringNullableWithAggregatesFilter<"FireExtinguisher"> | string | null;
     createdAt?: Prisma.DateTimeWithAggregatesFilter<"FireExtinguisher"> | Date | string;
     updatedAt?: Prisma.DateTimeWithAggregatesFilter<"FireExtinguisher"> | Date | string;
 };
@@ -215,6 +230,7 @@ export type FireExtinguisherCreateInput = {
     status?: $Enums.ExtinguisherStatus;
     createdAt?: Date | string;
     updatedAt?: Date | string;
+    owner?: Prisma.UserCreateNestedOneWithoutOwnedExtinguishersInput;
     inspections?: Prisma.InspectionCreateNestedManyWithoutExtinguisherInput;
     maintenanceLogs?: Prisma.MaintenanceLogCreateNestedManyWithoutExtinguisherInput;
     notifications?: Prisma.NotificationCreateNestedManyWithoutExtinguisherInput;
@@ -228,6 +244,7 @@ export type FireExtinguisherUncheckedCreateInput = {
     installationDate: Date | string;
     expiryDate: Date | string;
     status?: $Enums.ExtinguisherStatus;
+    ownerId?: string | null;
     createdAt?: Date | string;
     updatedAt?: Date | string;
     inspections?: Prisma.InspectionUncheckedCreateNestedManyWithoutExtinguisherInput;
@@ -245,6 +262,7 @@ export type FireExtinguisherUpdateInput = {
     status?: Prisma.EnumExtinguisherStatusFieldUpdateOperationsInput | $Enums.ExtinguisherStatus;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    owner?: Prisma.UserUpdateOneWithoutOwnedExtinguishersNestedInput;
     inspections?: Prisma.InspectionUpdateManyWithoutExtinguisherNestedInput;
     maintenanceLogs?: Prisma.MaintenanceLogUpdateManyWithoutExtinguisherNestedInput;
     notifications?: Prisma.NotificationUpdateManyWithoutExtinguisherNestedInput;
@@ -258,6 +276,7 @@ export type FireExtinguisherUncheckedUpdateInput = {
     installationDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     expiryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     status?: Prisma.EnumExtinguisherStatusFieldUpdateOperationsInput | $Enums.ExtinguisherStatus;
+    ownerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     inspections?: Prisma.InspectionUncheckedUpdateManyWithoutExtinguisherNestedInput;
@@ -273,6 +292,7 @@ export type FireExtinguisherCreateManyInput = {
     installationDate: Date | string;
     expiryDate: Date | string;
     status?: $Enums.ExtinguisherStatus;
+    ownerId?: string | null;
     createdAt?: Date | string;
     updatedAt?: Date | string;
 };
@@ -297,8 +317,17 @@ export type FireExtinguisherUncheckedUpdateManyInput = {
     installationDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     expiryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     status?: Prisma.EnumExtinguisherStatusFieldUpdateOperationsInput | $Enums.ExtinguisherStatus;
+    ownerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+};
+export type FireExtinguisherListRelationFilter = {
+    every?: Prisma.FireExtinguisherWhereInput;
+    some?: Prisma.FireExtinguisherWhereInput;
+    none?: Prisma.FireExtinguisherWhereInput;
+};
+export type FireExtinguisherOrderByRelationAggregateInput = {
+    _count?: Prisma.SortOrder;
 };
 export type FireExtinguisherCountOrderByAggregateInput = {
     id?: Prisma.SortOrder;
@@ -309,6 +338,7 @@ export type FireExtinguisherCountOrderByAggregateInput = {
     installationDate?: Prisma.SortOrder;
     expiryDate?: Prisma.SortOrder;
     status?: Prisma.SortOrder;
+    ownerId?: Prisma.SortOrder;
     createdAt?: Prisma.SortOrder;
     updatedAt?: Prisma.SortOrder;
 };
@@ -321,6 +351,7 @@ export type FireExtinguisherMaxOrderByAggregateInput = {
     installationDate?: Prisma.SortOrder;
     expiryDate?: Prisma.SortOrder;
     status?: Prisma.SortOrder;
+    ownerId?: Prisma.SortOrder;
     createdAt?: Prisma.SortOrder;
     updatedAt?: Prisma.SortOrder;
 };
@@ -333,6 +364,7 @@ export type FireExtinguisherMinOrderByAggregateInput = {
     installationDate?: Prisma.SortOrder;
     expiryDate?: Prisma.SortOrder;
     status?: Prisma.SortOrder;
+    ownerId?: Prisma.SortOrder;
     createdAt?: Prisma.SortOrder;
     updatedAt?: Prisma.SortOrder;
 };
@@ -343,6 +375,44 @@ export type FireExtinguisherScalarRelationFilter = {
 export type FireExtinguisherNullableScalarRelationFilter = {
     is?: Prisma.FireExtinguisherWhereInput | null;
     isNot?: Prisma.FireExtinguisherWhereInput | null;
+};
+export type FireExtinguisherCreateNestedManyWithoutOwnerInput = {
+    create?: Prisma.XOR<Prisma.FireExtinguisherCreateWithoutOwnerInput, Prisma.FireExtinguisherUncheckedCreateWithoutOwnerInput> | Prisma.FireExtinguisherCreateWithoutOwnerInput[] | Prisma.FireExtinguisherUncheckedCreateWithoutOwnerInput[];
+    connectOrCreate?: Prisma.FireExtinguisherCreateOrConnectWithoutOwnerInput | Prisma.FireExtinguisherCreateOrConnectWithoutOwnerInput[];
+    createMany?: Prisma.FireExtinguisherCreateManyOwnerInputEnvelope;
+    connect?: Prisma.FireExtinguisherWhereUniqueInput | Prisma.FireExtinguisherWhereUniqueInput[];
+};
+export type FireExtinguisherUncheckedCreateNestedManyWithoutOwnerInput = {
+    create?: Prisma.XOR<Prisma.FireExtinguisherCreateWithoutOwnerInput, Prisma.FireExtinguisherUncheckedCreateWithoutOwnerInput> | Prisma.FireExtinguisherCreateWithoutOwnerInput[] | Prisma.FireExtinguisherUncheckedCreateWithoutOwnerInput[];
+    connectOrCreate?: Prisma.FireExtinguisherCreateOrConnectWithoutOwnerInput | Prisma.FireExtinguisherCreateOrConnectWithoutOwnerInput[];
+    createMany?: Prisma.FireExtinguisherCreateManyOwnerInputEnvelope;
+    connect?: Prisma.FireExtinguisherWhereUniqueInput | Prisma.FireExtinguisherWhereUniqueInput[];
+};
+export type FireExtinguisherUpdateManyWithoutOwnerNestedInput = {
+    create?: Prisma.XOR<Prisma.FireExtinguisherCreateWithoutOwnerInput, Prisma.FireExtinguisherUncheckedCreateWithoutOwnerInput> | Prisma.FireExtinguisherCreateWithoutOwnerInput[] | Prisma.FireExtinguisherUncheckedCreateWithoutOwnerInput[];
+    connectOrCreate?: Prisma.FireExtinguisherCreateOrConnectWithoutOwnerInput | Prisma.FireExtinguisherCreateOrConnectWithoutOwnerInput[];
+    upsert?: Prisma.FireExtinguisherUpsertWithWhereUniqueWithoutOwnerInput | Prisma.FireExtinguisherUpsertWithWhereUniqueWithoutOwnerInput[];
+    createMany?: Prisma.FireExtinguisherCreateManyOwnerInputEnvelope;
+    set?: Prisma.FireExtinguisherWhereUniqueInput | Prisma.FireExtinguisherWhereUniqueInput[];
+    disconnect?: Prisma.FireExtinguisherWhereUniqueInput | Prisma.FireExtinguisherWhereUniqueInput[];
+    delete?: Prisma.FireExtinguisherWhereUniqueInput | Prisma.FireExtinguisherWhereUniqueInput[];
+    connect?: Prisma.FireExtinguisherWhereUniqueInput | Prisma.FireExtinguisherWhereUniqueInput[];
+    update?: Prisma.FireExtinguisherUpdateWithWhereUniqueWithoutOwnerInput | Prisma.FireExtinguisherUpdateWithWhereUniqueWithoutOwnerInput[];
+    updateMany?: Prisma.FireExtinguisherUpdateManyWithWhereWithoutOwnerInput | Prisma.FireExtinguisherUpdateManyWithWhereWithoutOwnerInput[];
+    deleteMany?: Prisma.FireExtinguisherScalarWhereInput | Prisma.FireExtinguisherScalarWhereInput[];
+};
+export type FireExtinguisherUncheckedUpdateManyWithoutOwnerNestedInput = {
+    create?: Prisma.XOR<Prisma.FireExtinguisherCreateWithoutOwnerInput, Prisma.FireExtinguisherUncheckedCreateWithoutOwnerInput> | Prisma.FireExtinguisherCreateWithoutOwnerInput[] | Prisma.FireExtinguisherUncheckedCreateWithoutOwnerInput[];
+    connectOrCreate?: Prisma.FireExtinguisherCreateOrConnectWithoutOwnerInput | Prisma.FireExtinguisherCreateOrConnectWithoutOwnerInput[];
+    upsert?: Prisma.FireExtinguisherUpsertWithWhereUniqueWithoutOwnerInput | Prisma.FireExtinguisherUpsertWithWhereUniqueWithoutOwnerInput[];
+    createMany?: Prisma.FireExtinguisherCreateManyOwnerInputEnvelope;
+    set?: Prisma.FireExtinguisherWhereUniqueInput | Prisma.FireExtinguisherWhereUniqueInput[];
+    disconnect?: Prisma.FireExtinguisherWhereUniqueInput | Prisma.FireExtinguisherWhereUniqueInput[];
+    delete?: Prisma.FireExtinguisherWhereUniqueInput | Prisma.FireExtinguisherWhereUniqueInput[];
+    connect?: Prisma.FireExtinguisherWhereUniqueInput | Prisma.FireExtinguisherWhereUniqueInput[];
+    update?: Prisma.FireExtinguisherUpdateWithWhereUniqueWithoutOwnerInput | Prisma.FireExtinguisherUpdateWithWhereUniqueWithoutOwnerInput[];
+    updateMany?: Prisma.FireExtinguisherUpdateManyWithWhereWithoutOwnerInput | Prisma.FireExtinguisherUpdateManyWithWhereWithoutOwnerInput[];
+    deleteMany?: Prisma.FireExtinguisherScalarWhereInput | Prisma.FireExtinguisherScalarWhereInput[];
 };
 export type EnumExtinguisherTypeFieldUpdateOperationsInput = {
     set?: $Enums.ExtinguisherType;
@@ -388,6 +458,73 @@ export type FireExtinguisherUpdateOneWithoutNotificationsNestedInput = {
     connect?: Prisma.FireExtinguisherWhereUniqueInput;
     update?: Prisma.XOR<Prisma.XOR<Prisma.FireExtinguisherUpdateToOneWithWhereWithoutNotificationsInput, Prisma.FireExtinguisherUpdateWithoutNotificationsInput>, Prisma.FireExtinguisherUncheckedUpdateWithoutNotificationsInput>;
 };
+export type FireExtinguisherCreateWithoutOwnerInput = {
+    id?: string;
+    serialNumber: string;
+    location: string;
+    type: $Enums.ExtinguisherType;
+    size: string;
+    installationDate: Date | string;
+    expiryDate: Date | string;
+    status?: $Enums.ExtinguisherStatus;
+    createdAt?: Date | string;
+    updatedAt?: Date | string;
+    inspections?: Prisma.InspectionCreateNestedManyWithoutExtinguisherInput;
+    maintenanceLogs?: Prisma.MaintenanceLogCreateNestedManyWithoutExtinguisherInput;
+    notifications?: Prisma.NotificationCreateNestedManyWithoutExtinguisherInput;
+};
+export type FireExtinguisherUncheckedCreateWithoutOwnerInput = {
+    id?: string;
+    serialNumber: string;
+    location: string;
+    type: $Enums.ExtinguisherType;
+    size: string;
+    installationDate: Date | string;
+    expiryDate: Date | string;
+    status?: $Enums.ExtinguisherStatus;
+    createdAt?: Date | string;
+    updatedAt?: Date | string;
+    inspections?: Prisma.InspectionUncheckedCreateNestedManyWithoutExtinguisherInput;
+    maintenanceLogs?: Prisma.MaintenanceLogUncheckedCreateNestedManyWithoutExtinguisherInput;
+    notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutExtinguisherInput;
+};
+export type FireExtinguisherCreateOrConnectWithoutOwnerInput = {
+    where: Prisma.FireExtinguisherWhereUniqueInput;
+    create: Prisma.XOR<Prisma.FireExtinguisherCreateWithoutOwnerInput, Prisma.FireExtinguisherUncheckedCreateWithoutOwnerInput>;
+};
+export type FireExtinguisherCreateManyOwnerInputEnvelope = {
+    data: Prisma.FireExtinguisherCreateManyOwnerInput | Prisma.FireExtinguisherCreateManyOwnerInput[];
+    skipDuplicates?: boolean;
+};
+export type FireExtinguisherUpsertWithWhereUniqueWithoutOwnerInput = {
+    where: Prisma.FireExtinguisherWhereUniqueInput;
+    update: Prisma.XOR<Prisma.FireExtinguisherUpdateWithoutOwnerInput, Prisma.FireExtinguisherUncheckedUpdateWithoutOwnerInput>;
+    create: Prisma.XOR<Prisma.FireExtinguisherCreateWithoutOwnerInput, Prisma.FireExtinguisherUncheckedCreateWithoutOwnerInput>;
+};
+export type FireExtinguisherUpdateWithWhereUniqueWithoutOwnerInput = {
+    where: Prisma.FireExtinguisherWhereUniqueInput;
+    data: Prisma.XOR<Prisma.FireExtinguisherUpdateWithoutOwnerInput, Prisma.FireExtinguisherUncheckedUpdateWithoutOwnerInput>;
+};
+export type FireExtinguisherUpdateManyWithWhereWithoutOwnerInput = {
+    where: Prisma.FireExtinguisherScalarWhereInput;
+    data: Prisma.XOR<Prisma.FireExtinguisherUpdateManyMutationInput, Prisma.FireExtinguisherUncheckedUpdateManyWithoutOwnerInput>;
+};
+export type FireExtinguisherScalarWhereInput = {
+    AND?: Prisma.FireExtinguisherScalarWhereInput | Prisma.FireExtinguisherScalarWhereInput[];
+    OR?: Prisma.FireExtinguisherScalarWhereInput[];
+    NOT?: Prisma.FireExtinguisherScalarWhereInput | Prisma.FireExtinguisherScalarWhereInput[];
+    id?: Prisma.StringFilter<"FireExtinguisher"> | string;
+    serialNumber?: Prisma.StringFilter<"FireExtinguisher"> | string;
+    location?: Prisma.StringFilter<"FireExtinguisher"> | string;
+    type?: Prisma.EnumExtinguisherTypeFilter<"FireExtinguisher"> | $Enums.ExtinguisherType;
+    size?: Prisma.StringFilter<"FireExtinguisher"> | string;
+    installationDate?: Prisma.DateTimeFilter<"FireExtinguisher"> | Date | string;
+    expiryDate?: Prisma.DateTimeFilter<"FireExtinguisher"> | Date | string;
+    status?: Prisma.EnumExtinguisherStatusFilter<"FireExtinguisher"> | $Enums.ExtinguisherStatus;
+    ownerId?: Prisma.StringNullableFilter<"FireExtinguisher"> | string | null;
+    createdAt?: Prisma.DateTimeFilter<"FireExtinguisher"> | Date | string;
+    updatedAt?: Prisma.DateTimeFilter<"FireExtinguisher"> | Date | string;
+};
 export type FireExtinguisherCreateWithoutInspectionsInput = {
     id?: string;
     serialNumber: string;
@@ -399,6 +536,7 @@ export type FireExtinguisherCreateWithoutInspectionsInput = {
     status?: $Enums.ExtinguisherStatus;
     createdAt?: Date | string;
     updatedAt?: Date | string;
+    owner?: Prisma.UserCreateNestedOneWithoutOwnedExtinguishersInput;
     maintenanceLogs?: Prisma.MaintenanceLogCreateNestedManyWithoutExtinguisherInput;
     notifications?: Prisma.NotificationCreateNestedManyWithoutExtinguisherInput;
 };
@@ -411,6 +549,7 @@ export type FireExtinguisherUncheckedCreateWithoutInspectionsInput = {
     installationDate: Date | string;
     expiryDate: Date | string;
     status?: $Enums.ExtinguisherStatus;
+    ownerId?: string | null;
     createdAt?: Date | string;
     updatedAt?: Date | string;
     maintenanceLogs?: Prisma.MaintenanceLogUncheckedCreateNestedManyWithoutExtinguisherInput;
@@ -440,6 +579,7 @@ export type FireExtinguisherUpdateWithoutInspectionsInput = {
     status?: Prisma.EnumExtinguisherStatusFieldUpdateOperationsInput | $Enums.ExtinguisherStatus;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    owner?: Prisma.UserUpdateOneWithoutOwnedExtinguishersNestedInput;
     maintenanceLogs?: Prisma.MaintenanceLogUpdateManyWithoutExtinguisherNestedInput;
     notifications?: Prisma.NotificationUpdateManyWithoutExtinguisherNestedInput;
 };
@@ -452,6 +592,7 @@ export type FireExtinguisherUncheckedUpdateWithoutInspectionsInput = {
     installationDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     expiryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     status?: Prisma.EnumExtinguisherStatusFieldUpdateOperationsInput | $Enums.ExtinguisherStatus;
+    ownerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     maintenanceLogs?: Prisma.MaintenanceLogUncheckedUpdateManyWithoutExtinguisherNestedInput;
@@ -468,6 +609,7 @@ export type FireExtinguisherCreateWithoutMaintenanceLogsInput = {
     status?: $Enums.ExtinguisherStatus;
     createdAt?: Date | string;
     updatedAt?: Date | string;
+    owner?: Prisma.UserCreateNestedOneWithoutOwnedExtinguishersInput;
     inspections?: Prisma.InspectionCreateNestedManyWithoutExtinguisherInput;
     notifications?: Prisma.NotificationCreateNestedManyWithoutExtinguisherInput;
 };
@@ -480,6 +622,7 @@ export type FireExtinguisherUncheckedCreateWithoutMaintenanceLogsInput = {
     installationDate: Date | string;
     expiryDate: Date | string;
     status?: $Enums.ExtinguisherStatus;
+    ownerId?: string | null;
     createdAt?: Date | string;
     updatedAt?: Date | string;
     inspections?: Prisma.InspectionUncheckedCreateNestedManyWithoutExtinguisherInput;
@@ -509,6 +652,7 @@ export type FireExtinguisherUpdateWithoutMaintenanceLogsInput = {
     status?: Prisma.EnumExtinguisherStatusFieldUpdateOperationsInput | $Enums.ExtinguisherStatus;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    owner?: Prisma.UserUpdateOneWithoutOwnedExtinguishersNestedInput;
     inspections?: Prisma.InspectionUpdateManyWithoutExtinguisherNestedInput;
     notifications?: Prisma.NotificationUpdateManyWithoutExtinguisherNestedInput;
 };
@@ -521,6 +665,7 @@ export type FireExtinguisherUncheckedUpdateWithoutMaintenanceLogsInput = {
     installationDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     expiryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     status?: Prisma.EnumExtinguisherStatusFieldUpdateOperationsInput | $Enums.ExtinguisherStatus;
+    ownerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     inspections?: Prisma.InspectionUncheckedUpdateManyWithoutExtinguisherNestedInput;
@@ -537,6 +682,7 @@ export type FireExtinguisherCreateWithoutNotificationsInput = {
     status?: $Enums.ExtinguisherStatus;
     createdAt?: Date | string;
     updatedAt?: Date | string;
+    owner?: Prisma.UserCreateNestedOneWithoutOwnedExtinguishersInput;
     inspections?: Prisma.InspectionCreateNestedManyWithoutExtinguisherInput;
     maintenanceLogs?: Prisma.MaintenanceLogCreateNestedManyWithoutExtinguisherInput;
 };
@@ -549,6 +695,7 @@ export type FireExtinguisherUncheckedCreateWithoutNotificationsInput = {
     installationDate: Date | string;
     expiryDate: Date | string;
     status?: $Enums.ExtinguisherStatus;
+    ownerId?: string | null;
     createdAt?: Date | string;
     updatedAt?: Date | string;
     inspections?: Prisma.InspectionUncheckedCreateNestedManyWithoutExtinguisherInput;
@@ -578,6 +725,7 @@ export type FireExtinguisherUpdateWithoutNotificationsInput = {
     status?: Prisma.EnumExtinguisherStatusFieldUpdateOperationsInput | $Enums.ExtinguisherStatus;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    owner?: Prisma.UserUpdateOneWithoutOwnedExtinguishersNestedInput;
     inspections?: Prisma.InspectionUpdateManyWithoutExtinguisherNestedInput;
     maintenanceLogs?: Prisma.MaintenanceLogUpdateManyWithoutExtinguisherNestedInput;
 };
@@ -590,10 +738,65 @@ export type FireExtinguisherUncheckedUpdateWithoutNotificationsInput = {
     installationDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     expiryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     status?: Prisma.EnumExtinguisherStatusFieldUpdateOperationsInput | $Enums.ExtinguisherStatus;
+    ownerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     inspections?: Prisma.InspectionUncheckedUpdateManyWithoutExtinguisherNestedInput;
     maintenanceLogs?: Prisma.MaintenanceLogUncheckedUpdateManyWithoutExtinguisherNestedInput;
+};
+export type FireExtinguisherCreateManyOwnerInput = {
+    id?: string;
+    serialNumber: string;
+    location: string;
+    type: $Enums.ExtinguisherType;
+    size: string;
+    installationDate: Date | string;
+    expiryDate: Date | string;
+    status?: $Enums.ExtinguisherStatus;
+    createdAt?: Date | string;
+    updatedAt?: Date | string;
+};
+export type FireExtinguisherUpdateWithoutOwnerInput = {
+    id?: Prisma.StringFieldUpdateOperationsInput | string;
+    serialNumber?: Prisma.StringFieldUpdateOperationsInput | string;
+    location?: Prisma.StringFieldUpdateOperationsInput | string;
+    type?: Prisma.EnumExtinguisherTypeFieldUpdateOperationsInput | $Enums.ExtinguisherType;
+    size?: Prisma.StringFieldUpdateOperationsInput | string;
+    installationDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    expiryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    status?: Prisma.EnumExtinguisherStatusFieldUpdateOperationsInput | $Enums.ExtinguisherStatus;
+    createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    inspections?: Prisma.InspectionUpdateManyWithoutExtinguisherNestedInput;
+    maintenanceLogs?: Prisma.MaintenanceLogUpdateManyWithoutExtinguisherNestedInput;
+    notifications?: Prisma.NotificationUpdateManyWithoutExtinguisherNestedInput;
+};
+export type FireExtinguisherUncheckedUpdateWithoutOwnerInput = {
+    id?: Prisma.StringFieldUpdateOperationsInput | string;
+    serialNumber?: Prisma.StringFieldUpdateOperationsInput | string;
+    location?: Prisma.StringFieldUpdateOperationsInput | string;
+    type?: Prisma.EnumExtinguisherTypeFieldUpdateOperationsInput | $Enums.ExtinguisherType;
+    size?: Prisma.StringFieldUpdateOperationsInput | string;
+    installationDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    expiryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    status?: Prisma.EnumExtinguisherStatusFieldUpdateOperationsInput | $Enums.ExtinguisherStatus;
+    createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    inspections?: Prisma.InspectionUncheckedUpdateManyWithoutExtinguisherNestedInput;
+    maintenanceLogs?: Prisma.MaintenanceLogUncheckedUpdateManyWithoutExtinguisherNestedInput;
+    notifications?: Prisma.NotificationUncheckedUpdateManyWithoutExtinguisherNestedInput;
+};
+export type FireExtinguisherUncheckedUpdateManyWithoutOwnerInput = {
+    id?: Prisma.StringFieldUpdateOperationsInput | string;
+    serialNumber?: Prisma.StringFieldUpdateOperationsInput | string;
+    location?: Prisma.StringFieldUpdateOperationsInput | string;
+    type?: Prisma.EnumExtinguisherTypeFieldUpdateOperationsInput | $Enums.ExtinguisherType;
+    size?: Prisma.StringFieldUpdateOperationsInput | string;
+    installationDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    expiryDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    status?: Prisma.EnumExtinguisherStatusFieldUpdateOperationsInput | $Enums.ExtinguisherStatus;
+    createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
 };
 export type FireExtinguisherCountOutputType = {
     inspections: number;
@@ -626,8 +829,10 @@ export type FireExtinguisherSelect<ExtArgs extends runtime.Types.Extensions.Inte
     installationDate?: boolean;
     expiryDate?: boolean;
     status?: boolean;
+    ownerId?: boolean;
     createdAt?: boolean;
     updatedAt?: boolean;
+    owner?: boolean | Prisma.FireExtinguisher$ownerArgs<ExtArgs>;
     inspections?: boolean | Prisma.FireExtinguisher$inspectionsArgs<ExtArgs>;
     maintenanceLogs?: boolean | Prisma.FireExtinguisher$maintenanceLogsArgs<ExtArgs>;
     notifications?: boolean | Prisma.FireExtinguisher$notificationsArgs<ExtArgs>;
@@ -642,8 +847,10 @@ export type FireExtinguisherSelectCreateManyAndReturn<ExtArgs extends runtime.Ty
     installationDate?: boolean;
     expiryDate?: boolean;
     status?: boolean;
+    ownerId?: boolean;
     createdAt?: boolean;
     updatedAt?: boolean;
+    owner?: boolean | Prisma.FireExtinguisher$ownerArgs<ExtArgs>;
 }, ExtArgs["result"]["fireExtinguisher"]>;
 export type FireExtinguisherSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
     id?: boolean;
@@ -654,8 +861,10 @@ export type FireExtinguisherSelectUpdateManyAndReturn<ExtArgs extends runtime.Ty
     installationDate?: boolean;
     expiryDate?: boolean;
     status?: boolean;
+    ownerId?: boolean;
     createdAt?: boolean;
     updatedAt?: boolean;
+    owner?: boolean | Prisma.FireExtinguisher$ownerArgs<ExtArgs>;
 }, ExtArgs["result"]["fireExtinguisher"]>;
 export type FireExtinguisherSelectScalar = {
     id?: boolean;
@@ -666,21 +875,28 @@ export type FireExtinguisherSelectScalar = {
     installationDate?: boolean;
     expiryDate?: boolean;
     status?: boolean;
+    ownerId?: boolean;
     createdAt?: boolean;
     updatedAt?: boolean;
 };
-export type FireExtinguisherOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "serialNumber" | "location" | "type" | "size" | "installationDate" | "expiryDate" | "status" | "createdAt" | "updatedAt", ExtArgs["result"]["fireExtinguisher"]>;
+export type FireExtinguisherOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "serialNumber" | "location" | "type" | "size" | "installationDate" | "expiryDate" | "status" | "ownerId" | "createdAt" | "updatedAt", ExtArgs["result"]["fireExtinguisher"]>;
 export type FireExtinguisherInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+    owner?: boolean | Prisma.FireExtinguisher$ownerArgs<ExtArgs>;
     inspections?: boolean | Prisma.FireExtinguisher$inspectionsArgs<ExtArgs>;
     maintenanceLogs?: boolean | Prisma.FireExtinguisher$maintenanceLogsArgs<ExtArgs>;
     notifications?: boolean | Prisma.FireExtinguisher$notificationsArgs<ExtArgs>;
     _count?: boolean | Prisma.FireExtinguisherCountOutputTypeDefaultArgs<ExtArgs>;
 };
-export type FireExtinguisherIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {};
-export type FireExtinguisherIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {};
+export type FireExtinguisherIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+    owner?: boolean | Prisma.FireExtinguisher$ownerArgs<ExtArgs>;
+};
+export type FireExtinguisherIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+    owner?: boolean | Prisma.FireExtinguisher$ownerArgs<ExtArgs>;
+};
 export type $FireExtinguisherPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
     name: "FireExtinguisher";
     objects: {
+        owner: Prisma.$UserPayload<ExtArgs> | null;
         inspections: Prisma.$InspectionPayload<ExtArgs>[];
         maintenanceLogs: Prisma.$MaintenanceLogPayload<ExtArgs>[];
         notifications: Prisma.$NotificationPayload<ExtArgs>[];
@@ -694,6 +910,7 @@ export type $FireExtinguisherPayload<ExtArgs extends runtime.Types.Extensions.In
         installationDate: Date;
         expiryDate: Date;
         status: $Enums.ExtinguisherStatus;
+        ownerId: string | null;
         createdAt: Date;
         updatedAt: Date;
     }, ExtArgs["result"]["fireExtinguisher"]>;
@@ -748,6 +965,7 @@ export interface FireExtinguisherDelegate<ExtArgs extends runtime.Types.Extensio
 }
 export interface Prisma__FireExtinguisherClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise";
+    owner<T extends Prisma.FireExtinguisher$ownerArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.FireExtinguisher$ownerArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>;
     inspections<T extends Prisma.FireExtinguisher$inspectionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.FireExtinguisher$inspectionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$InspectionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>;
     maintenanceLogs<T extends Prisma.FireExtinguisher$maintenanceLogsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.FireExtinguisher$maintenanceLogsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MaintenanceLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>;
     notifications<T extends Prisma.FireExtinguisher$notificationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.FireExtinguisher$notificationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NotificationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>;
@@ -764,6 +982,7 @@ export interface FireExtinguisherFieldRefs {
     readonly installationDate: Prisma.FieldRef<"FireExtinguisher", 'DateTime'>;
     readonly expiryDate: Prisma.FieldRef<"FireExtinguisher", 'DateTime'>;
     readonly status: Prisma.FieldRef<"FireExtinguisher", 'ExtinguisherStatus'>;
+    readonly ownerId: Prisma.FieldRef<"FireExtinguisher", 'String'>;
     readonly createdAt: Prisma.FieldRef<"FireExtinguisher", 'DateTime'>;
     readonly updatedAt: Prisma.FieldRef<"FireExtinguisher", 'DateTime'>;
 }
@@ -827,6 +1046,7 @@ export type FireExtinguisherCreateManyAndReturnArgs<ExtArgs extends runtime.Type
     omit?: Prisma.FireExtinguisherOmit<ExtArgs> | null;
     data: Prisma.FireExtinguisherCreateManyInput | Prisma.FireExtinguisherCreateManyInput[];
     skipDuplicates?: boolean;
+    include?: Prisma.FireExtinguisherIncludeCreateManyAndReturn<ExtArgs> | null;
 };
 export type FireExtinguisherUpdateArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
     select?: Prisma.FireExtinguisherSelect<ExtArgs> | null;
@@ -846,6 +1066,7 @@ export type FireExtinguisherUpdateManyAndReturnArgs<ExtArgs extends runtime.Type
     data: Prisma.XOR<Prisma.FireExtinguisherUpdateManyMutationInput, Prisma.FireExtinguisherUncheckedUpdateManyInput>;
     where?: Prisma.FireExtinguisherWhereInput;
     limit?: number;
+    include?: Prisma.FireExtinguisherIncludeUpdateManyAndReturn<ExtArgs> | null;
 };
 export type FireExtinguisherUpsertArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
     select?: Prisma.FireExtinguisherSelect<ExtArgs> | null;
@@ -864,6 +1085,12 @@ export type FireExtinguisherDeleteArgs<ExtArgs extends runtime.Types.Extensions.
 export type FireExtinguisherDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
     where?: Prisma.FireExtinguisherWhereInput;
     limit?: number;
+};
+export type FireExtinguisher$ownerArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+    select?: Prisma.UserSelect<ExtArgs> | null;
+    omit?: Prisma.UserOmit<ExtArgs> | null;
+    include?: Prisma.UserInclude<ExtArgs> | null;
+    where?: Prisma.UserWhereInput;
 };
 export type FireExtinguisher$inspectionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
     select?: Prisma.InspectionSelect<ExtArgs> | null;

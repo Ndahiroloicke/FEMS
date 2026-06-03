@@ -10,7 +10,6 @@ import {
   Select,
   EmptyState,
   ErrorState,
-  LoadingState,
 } from "@/components/ui/primitives";
 import { Modal } from "@/components/ui/modal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -45,10 +44,35 @@ const emptyForm: CreateExtinguisherInput = {
   status: "ACTIVE",
 };
 
+interface FormErrors {
+  serialNumber?: string;
+  location?: string;
+  size?: string;
+  installationDate?: string;
+  expiryDate?: string;
+}
+
+function TableSkeleton() {
+  return (
+    <div className="divide-y divide-border">
+      {[...Array(5)].map((_, i) => (
+        <div key={i} className="flex items-center gap-4 px-6 py-4">
+          <div className="h-4 w-24 animate-pulse rounded bg-slate-100" />
+          <div className="h-4 w-32 animate-pulse rounded bg-slate-100" />
+          <div className="h-4 w-20 animate-pulse rounded bg-slate-100" />
+          <div className="h-4 w-16 animate-pulse rounded bg-slate-100" />
+          <div className="ml-auto h-6 w-16 animate-pulse rounded-full bg-slate-100" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function ExtinguishersPage() {
   const { role } = useAuth();
   const toast = useToast();
   const isAdmin = role === "ADMIN";
+  const isUser = role === "USER";
 
   const [items, setItems] = useState<FireExtinguisher[]>([]);
   const [meta, setMeta] = useState<PageMeta | null>(null);
@@ -64,6 +88,7 @@ export default function ExtinguishersPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<FireExtinguisher | null>(null);
   const [form, setForm] = useState<CreateExtinguisherInput>(emptyForm);
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [saving, setSaving] = useState(false);
 
   const [detail, setDetail] = useState<FireExtinguisherDetail | null>(null);
@@ -97,9 +122,25 @@ export default function ExtinguishersPage() {
     load();
   }, [load]);
 
+  function validateForm(): boolean {
+    const next: FormErrors = {};
+    if (!form.serialNumber.trim()) next.serialNumber = "Serial number is required";
+    if (!form.location.trim()) next.location = "Location is required";
+    else if (form.location.trim().length < 3) next.location = "Location must be at least 3 characters";
+    if (!EXTINGUISHER_SIZES.includes(form.size as typeof EXTINGUISHER_SIZES[number]))
+      next.size = "Select a valid size";
+    if (!form.installationDate) next.installationDate = "Installation date is required";
+    if (!form.expiryDate) next.expiryDate = "Expiry date is required";
+    else if (form.installationDate && form.expiryDate <= form.installationDate)
+      next.expiryDate = "Expiry must be after installation date";
+    setFormErrors(next);
+    return Object.keys(next).length === 0;
+  }
+
   function openCreate() {
     setEditing(null);
     setForm(emptyForm);
+    setFormErrors({});
     setFormOpen(true);
   }
 
@@ -114,11 +155,13 @@ export default function ExtinguishersPage() {
       expiryDate: toDateInput(item.expiryDate),
       status: item.status,
     });
+    setFormErrors({});
     setFormOpen(true);
   }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (!validateForm()) return;
     setSaving(true);
     try {
       if (editing) {
@@ -177,12 +220,18 @@ export default function ExtinguishersPage() {
     <>
       <PageHeader
         title="Fire Extinguishers"
-        description="Register and manage your extinguisher inventory"
+        description={
+          isUser
+            ? "Showing extinguishers assigned to you."
+            : "Register and manage your extinguisher inventory"
+        }
         action={
-          <Button onClick={openCreate}>
-            <Plus className="h-4 w-4" />
-            Register extinguisher
-          </Button>
+          !isUser ? (
+            <Button onClick={openCreate}>
+              <Plus className="h-4 w-4" />
+              Register extinguisher
+            </Button>
+          ) : undefined
         }
       />
 
@@ -238,7 +287,7 @@ export default function ExtinguishersPage() {
         </div>
 
         {loading ? (
-          <LoadingState message="Loading extinguishers…" />
+          <TableSkeleton />
         ) : error ? (
           <ErrorState message={error} onRetry={load} />
         ) : items.length === 0 ? (
@@ -250,7 +299,7 @@ export default function ExtinguishersPage() {
           <>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-border bg-slate-50 text-xs uppercase tracking-wide text-muted">
+                <thead className="border-b border-border bg-slate-50 text-xs uppercase tracking-wide text-slate-400">
                   <tr>
                     <th className="px-6 py-3 font-medium">Serial</th>
                     <th className="px-6 py-3 font-medium">Location</th>
@@ -263,12 +312,12 @@ export default function ExtinguishersPage() {
                 </thead>
                 <tbody className="divide-y divide-border">
                   {items.map((ext) => (
-                    <tr key={ext.id} className="hover:bg-slate-50/50">
+                    <tr key={ext.id} className="transition-colors hover:bg-slate-50">
                       <td className="px-6 py-4 font-medium text-slate-900">{ext.serialNumber}</td>
                       <td className="px-6 py-4">{ext.location}</td>
-                      <td className="px-6 py-4 text-muted">{formatEnum(ext.type)}</td>
-                      <td className="px-6 py-4 text-muted">{ext.size}</td>
-                      <td className="px-6 py-4 text-muted">{formatDate(ext.expiryDate)}</td>
+                      <td className="px-6 py-4 text-slate-500">{formatEnum(ext.type)}</td>
+                      <td className="px-6 py-4 text-slate-500">{ext.size}</td>
+                      <td className="px-6 py-4 text-slate-500">{formatDate(ext.expiryDate)}</td>
                       <td className="px-6 py-4">
                         <StatusBadge status={ext.status} kind="extinguisher" />
                       </td>
@@ -277,24 +326,26 @@ export default function ExtinguishersPage() {
                           <button
                             type="button"
                             onClick={() => openDetail(ext.id)}
-                            className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                            className="rounded-md p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
                             title="View details"
                           >
                             <Eye className="h-4 w-4" />
                           </button>
-                          <button
-                            type="button"
-                            onClick={() => openEdit(ext)}
-                            className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
-                            title="Edit"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </button>
+                          {!isUser && (
+                            <button
+                              type="button"
+                              onClick={() => openEdit(ext)}
+                              className="rounded-md p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
+                              title="Edit"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </button>
+                          )}
                           {isAdmin && (
                             <button
                               type="button"
                               onClick={() => setDeleteTarget(ext)}
-                              className="rounded-md p-1.5 text-red-500 hover:bg-red-50 hover:text-red-700"
+                              className="rounded-md p-1.5 text-red-500 transition-colors hover:bg-red-50 hover:text-red-700"
                               title="Delete"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -322,19 +373,24 @@ export default function ExtinguishersPage() {
         <form onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-2">
           <Input
             label="Serial number"
-            required
             value={form.serialNumber}
-            onChange={(e) => setForm({ ...form, serialNumber: e.target.value })}
+            error={formErrors.serialNumber}
+            onChange={(e) => {
+              setForm({ ...form, serialNumber: e.target.value });
+              if (formErrors.serialNumber) setFormErrors((p) => ({ ...p, serialNumber: undefined }));
+            }}
           />
           <Input
             label="Location"
-            required
             value={form.location}
-            onChange={(e) => setForm({ ...form, location: e.target.value })}
+            error={formErrors.location}
+            onChange={(e) => {
+              setForm({ ...form, location: e.target.value });
+              if (formErrors.location) setFormErrors((p) => ({ ...p, location: undefined }));
+            }}
           />
           <Select
             label="Type"
-            required
             value={form.type}
             onChange={(e) => setForm({ ...form, type: e.target.value as ExtinguisherType })}
           >
@@ -346,9 +402,12 @@ export default function ExtinguishersPage() {
           </Select>
           <Select
             label="Size"
-            required
             value={form.size}
-            onChange={(e) => setForm({ ...form, size: e.target.value })}
+            error={formErrors.size}
+            onChange={(e) => {
+              setForm({ ...form, size: e.target.value });
+              if (formErrors.size) setFormErrors((p) => ({ ...p, size: undefined }));
+            }}
           >
             {EXTINGUISHER_SIZES.map((s) => (
               <option key={s} value={s}>
@@ -359,16 +418,23 @@ export default function ExtinguishersPage() {
           <Input
             label="Installation date"
             type="date"
-            required
             value={form.installationDate}
-            onChange={(e) => setForm({ ...form, installationDate: e.target.value })}
+            error={formErrors.installationDate}
+            onChange={(e) => {
+              setForm({ ...form, installationDate: e.target.value });
+              if (formErrors.installationDate)
+                setFormErrors((p) => ({ ...p, installationDate: undefined }));
+            }}
           />
           <Input
             label="Expiry date"
             type="date"
-            required
             value={form.expiryDate}
-            onChange={(e) => setForm({ ...form, expiryDate: e.target.value })}
+            error={formErrors.expiryDate}
+            onChange={(e) => {
+              setForm({ ...form, expiryDate: e.target.value });
+              if (formErrors.expiryDate) setFormErrors((p) => ({ ...p, expiryDate: undefined }));
+            }}
           />
           <Select
             label="Status"
@@ -382,7 +448,7 @@ export default function ExtinguishersPage() {
             ))}
           </Select>
           <div className="flex gap-2 sm:col-span-2">
-            <Button type="submit" loading={saving}>
+            <Button type="submit" loading={saving} disabled={saving}>
               {editing ? "Save changes" : "Register"}
             </Button>
             <Button type="button" variant="secondary" onClick={() => setFormOpen(false)}>
@@ -400,36 +466,40 @@ export default function ExtinguishersPage() {
         size="lg"
       >
         {detailLoading ? (
-          <LoadingState />
+          <div className="space-y-3 py-4">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="h-4 w-full animate-pulse rounded bg-slate-100" />
+            ))}
+          </div>
         ) : detail ? (
           <div className="space-y-6">
             <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
               <div>
-                <dt className="text-muted">Location</dt>
+                <dt className="text-slate-400">Location</dt>
                 <dd className="font-medium text-slate-900">{detail.location}</dd>
               </div>
               <div>
-                <dt className="text-muted">Type</dt>
+                <dt className="text-slate-400">Type</dt>
                 <dd className="font-medium text-slate-900">{formatEnum(detail.type)}</dd>
               </div>
               <div>
-                <dt className="text-muted">Size</dt>
+                <dt className="text-slate-400">Size</dt>
                 <dd className="font-medium text-slate-900">{detail.size}</dd>
               </div>
               <div>
-                <dt className="text-muted">Status</dt>
+                <dt className="text-slate-400">Status</dt>
                 <dd>
                   <StatusBadge status={detail.status} kind="extinguisher" />
                 </dd>
               </div>
               <div>
-                <dt className="text-muted">Installed</dt>
+                <dt className="text-slate-400">Installed</dt>
                 <dd className="font-medium text-slate-900">
                   {formatDate(detail.installationDate)}
                 </dd>
               </div>
               <div>
-                <dt className="text-muted">Expires</dt>
+                <dt className="text-slate-400">Expires</dt>
                 <dd className="font-medium text-slate-900">{formatDate(detail.expiryDate)}</dd>
               </div>
             </dl>
@@ -449,7 +519,7 @@ export default function ExtinguishersPage() {
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-muted">No inspections recorded.</p>
+                <p className="text-sm text-slate-400">No inspections recorded.</p>
               )}
             </div>
 
@@ -463,12 +533,12 @@ export default function ExtinguishersPage() {
                         <span className="text-slate-700">{formatDate(log.actionDate)}</span>
                         <StatusBadge status={log.conditionNoted} kind="condition" />
                       </div>
-                      <p className="mt-1 text-muted">{log.actionsTaken}</p>
+                      <p className="mt-1 text-slate-400">{log.actionsTaken}</p>
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-muted">No maintenance logs recorded.</p>
+                <p className="text-sm text-slate-400">No maintenance logs recorded.</p>
               )}
             </div>
           </div>
@@ -477,8 +547,8 @@ export default function ExtinguishersPage() {
 
       <ConfirmDialog
         open={Boolean(deleteTarget)}
-        title="Delete extinguisher"
-        message={`Are you sure you want to delete ${deleteTarget?.serialNumber}? This action cannot be undone.`}
+        title="Delete extinguisher?"
+        message="This cannot be undone."
         confirmLabel="Delete"
         destructive
         loading={deleting}

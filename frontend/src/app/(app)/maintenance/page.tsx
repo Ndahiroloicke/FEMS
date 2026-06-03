@@ -10,7 +10,6 @@ import {
   Select,
   EmptyState,
   ErrorState,
-  LoadingState,
 } from "@/components/ui/primitives";
 import { Modal, Textarea } from "@/components/ui/modal";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -31,6 +30,27 @@ import {
 import { formatDate, formatEnum } from "@/lib/utils";
 
 const PAGE_SIZE = 10;
+
+interface FormErrors {
+  extinguisherId?: string;
+  actionDate?: string;
+  actionsTaken?: string;
+}
+
+function TableSkeleton() {
+  return (
+    <div className="divide-y divide-border">
+      {[...Array(5)].map((_, i) => (
+        <div key={i} className="flex items-center gap-4 px-6 py-4">
+          <div className="h-4 w-28 animate-pulse rounded bg-slate-100" />
+          <div className="h-4 w-24 animate-pulse rounded bg-slate-100" />
+          <div className="h-4 w-48 animate-pulse rounded bg-slate-100" />
+          <div className="ml-auto h-6 w-16 animate-pulse rounded-full bg-slate-100" />
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function MaintenancePage() {
   const { role } = useAuth();
@@ -60,6 +80,7 @@ export default function MaintenancePage() {
     conditionNoted: "GOOD",
     inspectionId: "",
   });
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
@@ -85,15 +106,11 @@ export default function MaintenancePage() {
     api.extinguishers
       .list({ limit: 100, page: 1 })
       .then((res) => setExtinguishers(res.data))
-      .catch(() => {
-        /* ignore */
-      });
+      .catch(() => { /* ignore */ });
     api.inspections
       .list({ limit: 100, page: 1, status: "COMPLETED" })
       .then((res) => setInspections(res.data))
-      .catch(() => {
-        /* ignore */
-      });
+      .catch(() => { /* ignore */ });
   }, [canManage]);
 
   function openForm() {
@@ -104,11 +121,24 @@ export default function MaintenancePage() {
       conditionNoted: "GOOD",
       inspectionId: "",
     });
+    setFormErrors({});
     setFormOpen(true);
+  }
+
+  function validateForm(): boolean {
+    const next: FormErrors = {};
+    if (!form.extinguisherId) next.extinguisherId = "Select an extinguisher";
+    if (!form.actionDate) next.actionDate = "Action date is required";
+    if (!form.actionsTaken.trim()) next.actionsTaken = "Actions taken is required";
+    else if (form.actionsTaken.trim().length < 10)
+      next.actionsTaken = "Please provide at least 10 characters";
+    setFormErrors(next);
+    return Object.keys(next).length === 0;
   }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (!validateForm()) return;
     setSaving(true);
     try {
       const payload: CreateMaintenanceInput = {
@@ -147,7 +177,7 @@ export default function MaintenancePage() {
 
       <Card>
         {loading ? (
-          <LoadingState message="Loading maintenance logs…" />
+          <TableSkeleton />
         ) : error ? (
           <ErrorState message={error} onRetry={load} />
         ) : items.length === 0 ? (
@@ -159,7 +189,7 @@ export default function MaintenancePage() {
           <>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-border bg-slate-50 text-xs uppercase tracking-wide text-muted">
+                <thead className="border-b border-border bg-slate-50 text-xs uppercase tracking-wide text-slate-400">
                   <tr>
                     <th className="px-6 py-3 font-medium">Extinguisher</th>
                     <th className="px-6 py-3 font-medium">Date</th>
@@ -169,16 +199,16 @@ export default function MaintenancePage() {
                 </thead>
                 <tbody className="divide-y divide-border">
                   {items.map((log) => (
-                    <tr key={log.id} className="hover:bg-slate-50/50">
+                    <tr key={log.id} className="transition-colors hover:bg-slate-50">
                       <td className="px-6 py-4 font-medium text-slate-900">
                         {log.extinguisher?.serialNumber ?? "—"}
                         {log.extinguisher?.location && (
-                          <span className="block text-xs font-normal text-muted">
+                          <span className="block text-xs font-normal text-slate-400">
                             {log.extinguisher.location}
                           </span>
                         )}
                       </td>
-                      <td className="px-6 py-4 text-muted">{formatDate(log.actionDate)}</td>
+                      <td className="px-6 py-4 text-slate-500">{formatDate(log.actionDate)}</td>
                       <td className="max-w-md px-6 py-4 text-slate-700">{log.actionsTaken}</td>
                       <td className="px-6 py-4">
                         <StatusBadge status={log.conditionNoted} kind="condition" />
@@ -197,9 +227,13 @@ export default function MaintenancePage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <Select
             label="Extinguisher"
-            required
             value={form.extinguisherId}
-            onChange={(e) => setForm({ ...form, extinguisherId: e.target.value })}
+            error={formErrors.extinguisherId}
+            onChange={(e) => {
+              setForm({ ...form, extinguisherId: e.target.value });
+              if (formErrors.extinguisherId)
+                setFormErrors((p) => ({ ...p, extinguisherId: undefined }));
+            }}
           >
             <option value="">Select an extinguisher</option>
             {extinguishers.map((ext) => (
@@ -211,13 +245,15 @@ export default function MaintenancePage() {
           <Input
             label="Action date"
             type="date"
-            required
             value={form.actionDate}
-            onChange={(e) => setForm({ ...form, actionDate: e.target.value })}
+            error={formErrors.actionDate}
+            onChange={(e) => {
+              setForm({ ...form, actionDate: e.target.value });
+              if (formErrors.actionDate) setFormErrors((p) => ({ ...p, actionDate: undefined }));
+            }}
           />
           <Select
             label="Condition noted"
-            required
             value={form.conditionNoted}
             onChange={(e) =>
               setForm({ ...form, conditionNoted: e.target.value as MaintenanceCondition })
@@ -244,12 +280,16 @@ export default function MaintenancePage() {
           </Select>
           <Textarea
             label="Actions taken"
-            required
             value={form.actionsTaken}
-            onChange={(e) => setForm({ ...form, actionsTaken: e.target.value })}
+            error={formErrors.actionsTaken}
+            onChange={(e) => {
+              setForm({ ...form, actionsTaken: e.target.value });
+              if (formErrors.actionsTaken)
+                setFormErrors((p) => ({ ...p, actionsTaken: undefined }));
+            }}
           />
           <div className="flex gap-2">
-            <Button type="submit" loading={saving}>
+            <Button type="submit" loading={saving} disabled={saving}>
               Log maintenance
             </Button>
             <Button type="button" variant="secondary" onClick={() => setFormOpen(false)}>

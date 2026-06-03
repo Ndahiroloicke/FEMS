@@ -18,26 +18,36 @@ exports.RegisterDto = RegisterDto;
 __decorate([
     (0, swagger_1.ApiProperty)({ example: 'Jane' }),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsNotEmpty)({ message: 'First name is required' }),
+    (0, class_validator_1.MinLength)(2, { message: 'First name must be at least 2 characters' }),
     (0, class_validator_1.MaxLength)(100),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "firstName", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ example: 'Doe' }),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsNotEmpty)({ message: 'Last name is required' }),
+    (0, class_validator_1.MinLength)(2, { message: 'Last name must be at least 2 characters' }),
     (0, class_validator_1.MaxLength)(100),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "lastName", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ example: 'jane.doe@example.com' }),
-    (0, class_validator_1.IsEmail)(),
+    (0, class_validator_1.IsEmail)({}, { message: 'Please enter a valid email address' }),
+    (0, class_validator_1.MaxLength)(255),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "email", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ example: 'Password@123', minLength: 8 }),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.MinLength)(8),
+    (0, class_validator_1.MinLength)(8, { message: 'Password must be at least 8 characters' }),
+    (0, class_validator_1.MaxLength)(128),
+    (0, class_validator_1.Matches)(/(?=.*[A-Z])/, {
+        message: 'Password must contain at least one uppercase letter',
+    }),
+    (0, class_validator_1.Matches)(/(?=.*\d)/, {
+        message: 'Password must contain at least one number',
+    }),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "password", void 0);
 //# sourceMappingURL=register.dto.js.map

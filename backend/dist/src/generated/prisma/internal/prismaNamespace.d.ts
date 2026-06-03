@@ -602,6 +602,7 @@ export declare const FireExtinguisherScalarFieldEnum: {
     readonly installationDate: "installationDate";
     readonly expiryDate: "expiryDate";
     readonly status: "status";
+    readonly ownerId: "ownerId";
     readonly createdAt: "createdAt";
     readonly updatedAt: "updatedAt";
 };

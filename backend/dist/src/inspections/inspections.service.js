@@ -29,12 +29,16 @@ let InspectionsService = class InspectionsService {
         this.notifications = notifications;
         this.mailer = mailer;
     }
-    async create(dto, currentUserId) {
+    async create(dto, currentUser) {
         const extinguisher = await this.prisma.fireExtinguisher.findUnique({
             where: { id: dto.extinguisherId },
         });
         if (!extinguisher) {
             throw new common_1.NotFoundException(`Extinguisher ${dto.extinguisherId} not found`);
+        }
+        if (currentUser.role === 'USER' &&
+            extinguisher.ownerId !== currentUser.id) {
+            throw new common_1.ForbiddenException('You can only request inspections for your own extinguishers');
         }
         if (dto.inspectorId) {
             const inspector = await this.prisma.user.findUnique({
@@ -44,13 +48,16 @@ let InspectionsService = class InspectionsService {
                 throw new common_1.NotFoundException(`Inspector ${dto.inspectorId} not found`);
             }
         }
+        const initialStatus = currentUser.role === 'USER'
+            ? prisma_enums_js_1.InspectionStatus.PENDING
+            : prisma_enums_js_1.InspectionStatus.SCHEDULED;
         const inspection = await this.prisma.inspection.create({
             data: {
                 extinguisherId: dto.extinguisherId,
-                scheduledById: currentUserId,
+                scheduledById: currentUser.id,
                 inspectorId: dto.inspectorId ?? null,
                 scheduledAt: new Date(dto.scheduledAt),
-                status: prisma_enums_js_1.InspectionStatus.SCHEDULED,
+                status: initialStatus,
                 notes: dto.notes ?? null,
             },
             include: inspectionInclude,
@@ -76,9 +83,11 @@ let InspectionsService = class InspectionsService {
         });
         return inspection;
     }
-    async findAll(query) {
+    async findAll(query, currentUser) {
         const { skip, take, page, limit } = (0, pagination_dto_js_1.getSkipTake)(query.page, query.limit);
+        const userFilter = currentUser.role === 'USER' ? { scheduledById: currentUser.id } : {};
         const where = {
+            ...userFilter,
             ...(query.status ? { status: query.status } : {}),
             ...(query.extinguisherId ? { extinguisherId: query.extinguisherId } : {}),
             ...(query.inspectorId ? { inspectorId: query.inspectorId } : {}),
@@ -107,6 +116,24 @@ let InspectionsService = class InspectionsService {
             throw new common_1.NotFoundException(`Inspection ${id} not found`);
         }
         return inspection;
+    }
+    async approve(id, dto) {
+        const current = await this.prisma.inspection.findUnique({ where: { id } });
+        if (!current) {
+            throw new common_1.NotFoundException(`Inspection ${id} not found`);
+        }
+        if (current.status !== prisma_enums_js_1.InspectionStatus.PENDING) {
+            throw new common_1.BadRequestException('Only PENDING inspection requests can be approved');
+        }
+        return this.prisma.inspection.update({
+            where: { id },
+            data: {
+                status: prisma_enums_js_1.InspectionStatus.SCHEDULED,
+                inspectorId: dto.inspectorId ?? current.inspectorId,
+                notes: dto.notes ?? current.notes,
+            },
+            include: inspectionInclude,
+        });
     }
     async update(id, dto) {
         const current = await this.prisma.inspection.findUnique({ where: { id } });
