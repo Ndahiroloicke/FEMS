@@ -232,7 +232,7 @@ export default function ExtinguishersPage() {
     setUsersLoading(true);
     try {
       // Always fetch fresh, filter to USER role only
-      const res = await api.users.list({ limit: 200, role: "USER" });
+      const res = await api.users.list({ limit: 100, role: "USER" });
       setUsersList(res.data.filter((u) => u.isActive !== false));
     } catch (err) {
       setAssignError(err instanceof ApiError ? err.message : "Failed to load users");
