@@ -39,23 +39,33 @@ export class ReportsController {
 
   @Get('inspection-status')
   @ApiOperation({ summary: 'Inspection counts grouped by status' })
-  getInspectionStatus() {
-    return this.reportsService.getInspectionStatusCounts();
+  getInspectionStatus(@CurrentUser() user: AuthUser) {
+    const userId = user.role === Role.USER ? user.id : undefined;
+    return this.reportsService.getInspectionStatusCounts(userId);
   }
 
   @Get('expired')
   @ApiOperation({ summary: 'List expired extinguishers (paginated)' })
-  getExpired(@Query() query: MaintenanceHistoryQueryDto) {
-    return this.reportsService.getExpired(query.page, query.limit);
+  getExpired(
+    @Query() query: MaintenanceHistoryQueryDto,
+    @CurrentUser() user: AuthUser,
+  ) {
+    const userId = user.role === Role.USER ? user.id : undefined;
+    return this.reportsService.getExpired(query.page, query.limit, userId);
   }
 
   @Get('maintenance-history')
   @ApiOperation({ summary: 'Maintenance history (paginated)' })
-  getMaintenanceHistory(@Query() query: MaintenanceHistoryQueryDto) {
+  getMaintenanceHistory(
+    @Query() query: MaintenanceHistoryQueryDto,
+    @CurrentUser() user: AuthUser,
+  ) {
+    const userId = user.role === Role.USER ? user.id : undefined;
     return this.reportsService.getMaintenanceHistory(
       query.extinguisherId,
       query.page,
       query.limit,
+      userId,
     );
   }
 

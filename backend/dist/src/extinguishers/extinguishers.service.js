@@ -158,6 +158,10 @@ let ExtinguishersService = class ExtinguishersService {
             throw new common_1.NotFoundException(`Extinguisher ${id} not found`);
         }
         if (dto.ownerId) {
+            if (current.status === prisma_enums_js_1.ExtinguisherStatus.OUT_OF_SERVICE ||
+                current.status === prisma_enums_js_1.ExtinguisherStatus.NEEDS_MAINTENANCE) {
+                throw new common_1.BadRequestException('Cannot assign an extinguisher that is out of service or needs maintenance. Update its status first.');
+            }
             const owner = await this.prisma.user.findUnique({
                 where: { id: dto.ownerId },
             });

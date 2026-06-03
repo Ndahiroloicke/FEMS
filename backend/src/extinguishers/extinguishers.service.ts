@@ -11,7 +11,7 @@ import {
   type PaginatedResult,
 } from '../common/dto/pagination.dto.js';
 import type { AuthUser } from '../common/decorators/current-user.decorator.js';
-import { Role } from '../common/prisma-enums.js';
+import { ExtinguisherStatus, Role } from '../common/prisma-enums.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { AssignExtinguisherDto } from './dto/assign-extinguisher.dto.js';
 import { CreateExtinguisherDto } from './dto/create-extinguisher.dto.js';
@@ -194,6 +194,15 @@ export class ExtinguishersService {
     }
 
     if (dto.ownerId) {
+      if (
+        current.status === ExtinguisherStatus.OUT_OF_SERVICE ||
+        current.status === ExtinguisherStatus.NEEDS_MAINTENANCE
+      ) {
+        throw new BadRequestException(
+          'Cannot assign an extinguisher that is out of service or needs maintenance. Update its status first.',
+        );
+      }
+
       const owner = await this.prisma.user.findUnique({
         where: { id: dto.ownerId },
       });

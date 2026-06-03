@@ -131,10 +131,11 @@ let ReportsService = class ReportsService {
             return `${y}-${m}`;
         return `${y}-${m}-${d}`;
     }
-    async getInspectionStatusCounts() {
+    async getInspectionStatusCounts(userId) {
         const groups = await this.prisma.inspection.groupBy({
             by: ['status'],
             _count: { _all: true },
+            where: userId ? { extinguisher: { ownerId: userId } } : {},
         });
         const counts = {};
         for (const status of Object.values(prisma_enums_js_1.InspectionStatus)) {
@@ -147,10 +148,12 @@ let ReportsService = class ReportsService {
         }
         return { byStatus: counts, total };
     }
-    async getExpired(page = 1, limit = 10) {
+    async getExpired(page = 1, limit = 10, userId) {
         const { skip, take, page: p, limit: l } = (0, pagination_dto_js_1.getSkipTake)(page, limit);
         const now = new Date();
+        const ownerFilter = userId ? { ownerId: userId } : {};
         const where = {
+            ...ownerFilter,
             OR: [{ status: prisma_enums_js_1.ExtinguisherStatus.EXPIRED }, { expiryDate: { lt: now } }],
         };
         const [data, total] = await Promise.all([
@@ -164,9 +167,12 @@ let ReportsService = class ReportsService {
         ]);
         return { data, meta: (0, pagination_dto_js_1.buildPaginationMeta)(total, p, l) };
     }
-    async getMaintenanceHistory(extinguisherId, page = 1, limit = 10) {
+    async getMaintenanceHistory(extinguisherId, page = 1, limit = 10, userId) {
         const { skip, take, page: p, limit: l } = (0, pagination_dto_js_1.getSkipTake)(page, limit);
-        const where = extinguisherId ? { extinguisherId } : {};
+        const where = {
+            ...(extinguisherId ? { extinguisherId } : {}),
+            ...(userId ? { extinguisher: { ownerId: userId } } : {}),
+        };
         const [data, total] = await Promise.all([
             this.prisma.maintenanceLog.findMany({
                 where,

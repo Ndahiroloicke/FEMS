@@ -21,11 +21,11 @@ export declare class ReportsController {
         period: string;
         count: number;
     }[]>;
-    getInspectionStatus(): Promise<{
+    getInspectionStatus(user: AuthUser): Promise<{
         byStatus: Record<string, number>;
         total: number;
     }>;
-    getExpired(query: MaintenanceHistoryQueryDto): Promise<import("../common/dto/pagination.dto.js").PaginatedResult<unknown>>;
-    getMaintenanceHistory(query: MaintenanceHistoryQueryDto): Promise<import("../common/dto/pagination.dto.js").PaginatedResult<unknown>>;
+    getExpired(query: MaintenanceHistoryQueryDto, user: AuthUser): Promise<import("../common/dto/pagination.dto.js").PaginatedResult<unknown>>;
+    getMaintenanceHistory(query: MaintenanceHistoryQueryDto, user: AuthUser): Promise<import("../common/dto/pagination.dto.js").PaginatedResult<unknown>>;
     export(query: ExportQueryDto, res: Response, user: AuthUser): Promise<void>;
 }

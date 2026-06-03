@@ -1,5 +1,6 @@
 import { type PaginatedResult } from '../common/dto/pagination.dto.js';
 import type { AuthUser } from '../common/decorators/current-user.decorator.js';
+import { ExtinguisherStatus } from '../common/prisma-enums.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { AssignExtinguisherDto } from './dto/assign-extinguisher.dto.js';
 import { CreateExtinguisherDto } from './dto/create-extinguisher.dto.js';
@@ -16,7 +17,7 @@ export declare class ExtinguishersService {
         serialNumber: string;
         type: import("../common/prisma-enums.js").ExtinguisherType;
         expiryDate: Date;
-        status: import("../common/prisma-enums.js").ExtinguisherStatus;
+        status: ExtinguisherStatus;
         location: string;
         size: string;
         installationDate: Date;
@@ -66,7 +67,7 @@ export declare class ExtinguishersService {
         serialNumber: string;
         type: import("../common/prisma-enums.js").ExtinguisherType;
         expiryDate: Date;
-        status: import("../common/prisma-enums.js").ExtinguisherStatus;
+        status: ExtinguisherStatus;
         location: string;
         size: string;
         installationDate: Date;
@@ -79,7 +80,7 @@ export declare class ExtinguishersService {
         serialNumber: string;
         type: import("../common/prisma-enums.js").ExtinguisherType;
         expiryDate: Date;
-        status: import("../common/prisma-enums.js").ExtinguisherStatus;
+        status: ExtinguisherStatus;
         location: string;
         size: string;
         installationDate: Date;
@@ -99,7 +100,7 @@ export declare class ExtinguishersService {
         serialNumber: string;
         type: import("../common/prisma-enums.js").ExtinguisherType;
         expiryDate: Date;
-        status: import("../common/prisma-enums.js").ExtinguisherStatus;
+        status: ExtinguisherStatus;
         location: string;
         size: string;
         installationDate: Date;

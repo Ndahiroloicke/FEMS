@@ -22,10 +22,10 @@ export declare class ReportsService {
         count: number;
     }[]>;
     private bucketKey;
-    getInspectionStatusCounts(): Promise<{
+    getInspectionStatusCounts(userId?: string): Promise<{
         byStatus: Record<string, number>;
         total: number;
     }>;
-    getExpired(page?: number, limit?: number): Promise<PaginatedResult<unknown>>;
-    getMaintenanceHistory(extinguisherId?: string, page?: number, limit?: number): Promise<PaginatedResult<unknown>>;
+    getExpired(page?: number, limit?: number, userId?: string): Promise<PaginatedResult<unknown>>;
+    getMaintenanceHistory(extinguisherId?: string, page?: number, limit?: number, userId?: string): Promise<PaginatedResult<unknown>>;
 }

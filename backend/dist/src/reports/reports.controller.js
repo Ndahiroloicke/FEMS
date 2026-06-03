@@ -35,14 +35,17 @@ let ReportsController = class ReportsController {
         const userId = user.role === prisma_enums_js_1.Role.USER ? user.id : undefined;
         return this.reportsService.getStock(query.period ?? 'monthly', userId);
     }
-    getInspectionStatus() {
-        return this.reportsService.getInspectionStatusCounts();
+    getInspectionStatus(user) {
+        const userId = user.role === prisma_enums_js_1.Role.USER ? user.id : undefined;
+        return this.reportsService.getInspectionStatusCounts(userId);
     }
-    getExpired(query) {
-        return this.reportsService.getExpired(query.page, query.limit);
+    getExpired(query, user) {
+        const userId = user.role === prisma_enums_js_1.Role.USER ? user.id : undefined;
+        return this.reportsService.getExpired(query.page, query.limit, userId);
     }
-    getMaintenanceHistory(query) {
-        return this.reportsService.getMaintenanceHistory(query.extinguisherId, query.page, query.limit);
+    getMaintenanceHistory(query, user) {
+        const userId = user.role === prisma_enums_js_1.Role.USER ? user.id : undefined;
+        return this.reportsService.getMaintenanceHistory(query.extinguisherId, query.page, query.limit, userId);
     }
     export(query, res, user) {
         const userId = user.role === prisma_enums_js_1.Role.USER ? user.id : undefined;
@@ -70,24 +73,27 @@ __decorate([
 __decorate([
     (0, common_1.Get)('inspection-status'),
     (0, swagger_1.ApiOperation)({ summary: 'Inspection counts grouped by status' }),
+    __param(0, (0, current_user_decorator_js_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], ReportsController.prototype, "getInspectionStatus", null);
 __decorate([
     (0, common_1.Get)('expired'),
     (0, swagger_1.ApiOperation)({ summary: 'List expired extinguishers (paginated)' }),
     __param(0, (0, common_1.Query)()),
+    __param(1, (0, current_user_decorator_js_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [export_query_dto_js_1.MaintenanceHistoryQueryDto]),
+    __metadata("design:paramtypes", [export_query_dto_js_1.MaintenanceHistoryQueryDto, Object]),
     __metadata("design:returntype", void 0)
 ], ReportsController.prototype, "getExpired", null);
 __decorate([
     (0, common_1.Get)('maintenance-history'),
     (0, swagger_1.ApiOperation)({ summary: 'Maintenance history (paginated)' }),
     __param(0, (0, common_1.Query)()),
+    __param(1, (0, current_user_decorator_js_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [export_query_dto_js_1.MaintenanceHistoryQueryDto]),
+    __metadata("design:paramtypes", [export_query_dto_js_1.MaintenanceHistoryQueryDto, Object]),
     __metadata("design:returntype", void 0)
 ], ReportsController.prototype, "getMaintenanceHistory", null);
 __decorate([

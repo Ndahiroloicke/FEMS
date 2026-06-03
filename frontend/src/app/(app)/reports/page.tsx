@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/primitives";
 import { StatCard, StatusBadge } from "@/components/ui/status-badge";
 import { Pagination } from "@/components/ui/pagination";
+import { useAuth } from "@/components/providers/auth-provider";
 import { useToast } from "@/components/providers/toast-provider";
 import {
   api,
@@ -37,6 +38,8 @@ const exportReports: { key: ReportType; label: string }[] = [
 ];
 
 export default function ReportsPage() {
+  const { role } = useAuth();
+  const isUser = role === "USER";
   const toast = useToast();
 
   const [summary, setSummary] = useState<ReportSummary | null>(null);
@@ -130,7 +133,14 @@ export default function ReportsPage() {
 
   return (
     <>
-      <PageHeader title="Reports" description="Summaries, exports, and compliance records" />
+      <PageHeader
+        title={isUser ? "My Reports" : "Reports"}
+        description={
+          isUser
+            ? "Summaries and records for your assigned extinguishers only"
+            : "Summaries, exports, and compliance records"
+        }
+      />
 
       {/* Summary */}
       {topLoading ? (
@@ -220,7 +230,14 @@ export default function ReportsPage() {
         {expiredLoading ? (
           <LoadingState />
         ) : expired.length === 0 ? (
-          <EmptyState title="None expired" message="No expired extinguishers on record." />
+          <EmptyState
+            title="None expired"
+            message={
+              isUser
+                ? "None of your assigned extinguishers are expired."
+                : "No expired extinguishers on record."
+            }
+          />
         ) : (
           <>
             <div className="overflow-x-auto">
@@ -258,7 +275,14 @@ export default function ReportsPage() {
         {historyLoading ? (
           <LoadingState />
         ) : history.length === 0 ? (
-          <EmptyState title="No history" message="No maintenance records found." />
+          <EmptyState
+            title="No history"
+            message={
+              isUser
+                ? "No maintenance records for your assigned extinguishers."
+                : "No maintenance records found."
+            }
+          />
         ) : (
           <>
             <div className="overflow-x-auto">

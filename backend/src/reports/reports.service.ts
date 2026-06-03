@@ -149,10 +149,11 @@ export class ReportsService {
     return `${y}-${m}-${d}`;
   }
 
-  async getInspectionStatusCounts() {
+  async getInspectionStatusCounts(userId?: string) {
     const groups = await this.prisma.inspection.groupBy({
       by: ['status'],
       _count: { _all: true },
+      where: userId ? { extinguisher: { ownerId: userId } } : {},
     });
 
     const counts: Record<string, number> = {};
@@ -167,10 +168,16 @@ export class ReportsService {
     return { byStatus: counts, total };
   }
 
-  async getExpired(page = 1, limit = 10): Promise<PaginatedResult<unknown>> {
+  async getExpired(
+    page = 1,
+    limit = 10,
+    userId?: string,
+  ): Promise<PaginatedResult<unknown>> {
     const { skip, take, page: p, limit: l } = getSkipTake(page, limit);
     const now = new Date();
+    const ownerFilter = userId ? { ownerId: userId } : {};
     const where = {
+      ...ownerFilter,
       OR: [{ status: ExtinguisherStatus.EXPIRED }, { expiryDate: { lt: now } }],
     };
 
@@ -191,9 +198,13 @@ export class ReportsService {
     extinguisherId?: string,
     page = 1,
     limit = 10,
+    userId?: string,
   ): Promise<PaginatedResult<unknown>> {
     const { skip, take, page: p, limit: l } = getSkipTake(page, limit);
-    const where = extinguisherId ? { extinguisherId } : {};
+    const where = {
+      ...(extinguisherId ? { extinguisherId } : {}),
+      ...(userId ? { extinguisher: { ownerId: userId } } : {}),
+    };
 
     const [data, total] = await Promise.all([
       this.prisma.maintenanceLog.findMany({
