@@ -9,8 +9,8 @@ export declare class InspectionsController {
         extinguisher: {
             id: string;
             serialNumber: string;
-            type: import("../common/prisma-enums.js").ExtinguisherType;
             location: string;
+            type: import("../common/prisma-enums.js").ExtinguisherType;
         };
         scheduledBy: {
             id: string;
@@ -26,32 +26,32 @@ export declare class InspectionsController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        result: string | null;
         status: import("../common/prisma-enums.js").InspectionStatus;
+        scheduledAt: Date;
         extinguisherId: string;
         notes: string | null;
+        completedAt: Date | null;
         scheduledById: string;
         inspectorId: string | null;
-        scheduledAt: Date;
-        result: string | null;
-        completedAt: Date | null;
     }>;
     findAll(query: QueryInspectionDto): Promise<import("../common/dto/pagination.dto.js").PaginatedResult<unknown>>;
     findOne(id: string): Promise<{
         maintenanceLogs: {
             id: string;
             createdAt: Date;
+            actionDate: Date;
             extinguisherId: string;
             inspectorId: string;
-            inspectionId: string | null;
             actionsTaken: string;
             conditionNoted: import("../common/prisma-enums.js").MaintenanceCondition;
-            actionDate: Date;
+            inspectionId: string | null;
         }[];
         extinguisher: {
             id: string;
             serialNumber: string;
-            type: import("../common/prisma-enums.js").ExtinguisherType;
             location: string;
+            type: import("../common/prisma-enums.js").ExtinguisherType;
         };
         scheduledBy: {
             id: string;
@@ -67,21 +67,21 @@ export declare class InspectionsController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        result: string | null;
         status: import("../common/prisma-enums.js").InspectionStatus;
+        scheduledAt: Date;
         extinguisherId: string;
         notes: string | null;
+        completedAt: Date | null;
         scheduledById: string;
         inspectorId: string | null;
-        scheduledAt: Date;
-        result: string | null;
-        completedAt: Date | null;
     }>;
     update(id: string, dto: UpdateInspectionDto): Promise<{
         extinguisher: {
             id: string;
             serialNumber: string;
-            type: import("../common/prisma-enums.js").ExtinguisherType;
             location: string;
+            type: import("../common/prisma-enums.js").ExtinguisherType;
         };
         scheduledBy: {
             id: string;
@@ -97,14 +97,14 @@ export declare class InspectionsController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        result: string | null;
         status: import("../common/prisma-enums.js").InspectionStatus;
+        scheduledAt: Date;
         extinguisherId: string;
         notes: string | null;
+        completedAt: Date | null;
         scheduledById: string;
         inspectorId: string | null;
-        scheduledAt: Date;
-        result: string | null;
-        completedAt: Date | null;
     }>;
     remove(id: string): Promise<{
         message: string;

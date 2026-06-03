@@ -15,8 +15,6 @@ import { ReportsService } from './reports.service.js';
 @ApiTags('Reports')
 @ApiBearerAuth()
 @Controller('reports')
-@UseGuards(RolesGuard)
-@Roles(Role.ADMIN, Role.INSPECTOR)
 export class ReportsController {
   constructor(
     private readonly reportsService: ReportsService,
@@ -58,7 +56,9 @@ export class ReportsController {
   }
 
   @Get('export')
-  @ApiOperation({ summary: 'Export a report as CSV or PDF' })
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN, Role.INSPECTOR)
+  @ApiOperation({ summary: 'Export a report as CSV or PDF (ADMIN/INSPECTOR only)' })
   export(@Query() query: ExportQueryDto, @Res() res: Response) {
     return this.exportService.export(query.report, query.format, res);
   }

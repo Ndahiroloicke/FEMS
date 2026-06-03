@@ -1,3 +1,4 @@
+import { ConfigService } from '@nestjs/config';
 import { Strategy } from 'passport-jwt';
 import type { AuthUser } from '../common/decorators/current-user.decorator.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -11,7 +12,7 @@ declare const JwtStrategy_base: new (...args: [opt: import("passport-jwt").Strat
 };
 export declare class JwtStrategy extends JwtStrategy_base {
     private readonly prisma;
-    constructor(prisma: PrismaService);
+    constructor(prisma: PrismaService, config: ConfigService);
     validate(payload: JwtPayload): Promise<AuthUser>;
 }
 export {};

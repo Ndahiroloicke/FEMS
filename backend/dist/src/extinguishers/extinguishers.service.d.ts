@@ -12,12 +12,12 @@ export declare class ExtinguishersService {
         createdAt: Date;
         updatedAt: Date;
         serialNumber: string;
-        type: import("../common/prisma-enums.js").ExtinguisherType;
-        expiryDate: Date;
-        status: import("../common/prisma-enums.js").ExtinguisherStatus;
         location: string;
+        type: import("../common/prisma-enums.js").ExtinguisherType;
         size: string;
         installationDate: Date;
+        expiryDate: Date;
+        status: import("../common/prisma-enums.js").ExtinguisherStatus;
     }>;
     findAll(query: QueryExtinguisherDto): Promise<PaginatedResult<unknown>>;
     findOne(id: string): Promise<{
@@ -30,12 +30,12 @@ export declare class ExtinguishersService {
         } & {
             id: string;
             createdAt: Date;
+            actionDate: Date;
             extinguisherId: string;
             inspectorId: string;
-            inspectionId: string | null;
             actionsTaken: string;
             conditionNoted: import("../common/prisma-enums.js").MaintenanceCondition;
-            actionDate: Date;
+            inspectionId: string | null;
         })[];
         inspections: ({
             inspector: {
@@ -47,38 +47,38 @@ export declare class ExtinguishersService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            result: string | null;
             status: import("../common/prisma-enums.js").InspectionStatus;
+            scheduledAt: Date;
             extinguisherId: string;
             notes: string | null;
+            completedAt: Date | null;
             scheduledById: string;
             inspectorId: string | null;
-            scheduledAt: Date;
-            result: string | null;
-            completedAt: Date | null;
         })[];
     } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
         serialNumber: string;
-        type: import("../common/prisma-enums.js").ExtinguisherType;
-        expiryDate: Date;
-        status: import("../common/prisma-enums.js").ExtinguisherStatus;
         location: string;
+        type: import("../common/prisma-enums.js").ExtinguisherType;
         size: string;
         installationDate: Date;
+        expiryDate: Date;
+        status: import("../common/prisma-enums.js").ExtinguisherStatus;
     }>;
     update(id: string, dto: UpdateExtinguisherDto): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
         serialNumber: string;
-        type: import("../common/prisma-enums.js").ExtinguisherType;
-        expiryDate: Date;
-        status: import("../common/prisma-enums.js").ExtinguisherStatus;
         location: string;
+        type: import("../common/prisma-enums.js").ExtinguisherType;
         size: string;
         installationDate: Date;
+        expiryDate: Date;
+        status: import("../common/prisma-enums.js").ExtinguisherStatus;
     }>;
     remove(id: string): Promise<{
         message: string;

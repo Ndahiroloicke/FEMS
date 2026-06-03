@@ -15,10 +15,10 @@ export declare class NotificationsController {
         type: import("../common/prisma-enums.js").NotificationType;
         channel: import("../common/prisma-enums.js").NotificationChannel;
         message: string;
-        sentAt: Date;
-        extinguisherId: string | null;
-        userId: string;
         isRead: boolean;
+        sentAt: Date;
+        userId: string;
+        extinguisherId: string | null;
     }>;
 }
 export {};

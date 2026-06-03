@@ -10,6 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PrismaService = void 0;
+require("dotenv/config");
 const common_1 = require("@nestjs/common");
 const adapter_pg_1 = require("@prisma/adapter-pg");
 const pg_1 = require("pg");

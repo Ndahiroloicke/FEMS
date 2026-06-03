@@ -1,3 +1,5 @@
+import 'dotenv/config'; // must be first — loads .env before any module metadata is evaluated
+import 'dotenv/config'; // must be first — loads .env before any module is instantiated
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';

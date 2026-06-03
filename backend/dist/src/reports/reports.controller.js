@@ -86,7 +86,9 @@ __decorate([
 ], ReportsController.prototype, "getMaintenanceHistory", null);
 __decorate([
     (0, common_1.Get)('export'),
-    (0, swagger_1.ApiOperation)({ summary: 'Export a report as CSV or PDF' }),
+    (0, common_1.UseGuards)(roles_guard_js_1.RolesGuard),
+    (0, roles_decorator_js_1.Roles)(prisma_enums_js_1.Role.ADMIN, prisma_enums_js_1.Role.INSPECTOR),
+    (0, swagger_1.ApiOperation)({ summary: 'Export a report as CSV or PDF (ADMIN/INSPECTOR only)' }),
     __param(0, (0, common_1.Query)()),
     __param(1, (0, common_1.Res)()),
     __metadata("design:type", Function),
@@ -97,8 +99,6 @@ exports.ReportsController = ReportsController = __decorate([
     (0, swagger_1.ApiTags)('Reports'),
     (0, swagger_1.ApiBearerAuth)(),
     (0, common_1.Controller)('reports'),
-    (0, common_1.UseGuards)(roles_guard_js_1.RolesGuard),
-    (0, roles_decorator_js_1.Roles)(prisma_enums_js_1.Role.ADMIN, prisma_enums_js_1.Role.INSPECTOR),
     __metadata("design:paramtypes", [reports_service_js_1.ReportsService,
         export_service_js_1.ExportService])
 ], ReportsController);
