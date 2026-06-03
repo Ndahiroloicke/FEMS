@@ -1,7 +1,5 @@
-import { ExtinguisherStatus } from '../../generated/prisma/client';
-export declare class UpdateExtinguisherDto {
-    type?: string;
-    capacity?: string;
-    expiryDate?: string;
-    status?: ExtinguisherStatus;
+import { CreateExtinguisherDto } from './create-extinguisher.dto.js';
+declare const UpdateExtinguisherDto_base: import("@nestjs/common").Type<Partial<CreateExtinguisherDto>>;
+export declare class UpdateExtinguisherDto extends UpdateExtinguisherDto_base {
 }
+export {};

@@ -11,10 +11,11 @@ export declare const DbNull: import("@prisma/client-runtime-utils").DbNullClass;
 export declare const JsonNull: import("@prisma/client-runtime-utils").JsonNullClass;
 export declare const AnyNull: import("@prisma/client-runtime-utils").AnyNullClass;
 export declare const ModelName: {
-    readonly Customer: "Customer";
+    readonly User: "User";
     readonly FireExtinguisher: "FireExtinguisher";
+    readonly Inspection: "Inspection";
+    readonly MaintenanceLog: "MaintenanceLog";
     readonly Notification: "Notification";
-    readonly Escalation: "Escalation";
 };
 export type ModelName = (typeof ModelName)[keyof typeof ModelName];
 export declare const TransactionIsolationLevel: {
@@ -24,53 +25,69 @@ export declare const TransactionIsolationLevel: {
     readonly Serializable: "Serializable";
 };
 export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel];
-export declare const CustomerScalarFieldEnum: {
+export declare const UserScalarFieldEnum: {
     readonly id: "id";
-    readonly fullName: "fullName";
-    readonly nationalId: "nationalId";
+    readonly firstName: "firstName";
+    readonly lastName: "lastName";
     readonly email: "email";
-    readonly phone: "phone";
-    readonly address: "address";
+    readonly passwordHash: "passwordHash";
+    readonly role: "role";
+    readonly isActive: "isActive";
+    readonly resetToken: "resetToken";
+    readonly resetTokenExpiresAt: "resetTokenExpiresAt";
     readonly createdAt: "createdAt";
     readonly updatedAt: "updatedAt";
 };
-export type CustomerScalarFieldEnum = (typeof CustomerScalarFieldEnum)[keyof typeof CustomerScalarFieldEnum];
+export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum];
 export declare const FireExtinguisherScalarFieldEnum: {
     readonly id: "id";
     readonly serialNumber: "serialNumber";
+    readonly location: "location";
     readonly type: "type";
-    readonly capacity: "capacity";
-    readonly purchaseDate: "purchaseDate";
+    readonly size: "size";
+    readonly installationDate: "installationDate";
     readonly expiryDate: "expiryDate";
     readonly status: "status";
-    readonly customerId: "customerId";
     readonly createdAt: "createdAt";
     readonly updatedAt: "updatedAt";
 };
 export type FireExtinguisherScalarFieldEnum = (typeof FireExtinguisherScalarFieldEnum)[keyof typeof FireExtinguisherScalarFieldEnum];
-export declare const NotificationScalarFieldEnum: {
+export declare const InspectionScalarFieldEnum: {
     readonly id: "id";
-    readonly type: "type";
-    readonly channel: "channel";
-    readonly message: "message";
-    readonly sentAt: "sentAt";
-    readonly customerId: "customerId";
     readonly extinguisherId: "extinguisherId";
-};
-export type NotificationScalarFieldEnum = (typeof NotificationScalarFieldEnum)[keyof typeof NotificationScalarFieldEnum];
-export declare const EscalationScalarFieldEnum: {
-    readonly id: "id";
-    readonly reason: "reason";
+    readonly scheduledById: "scheduledById";
+    readonly inspectorId: "inspectorId";
+    readonly scheduledAt: "scheduledAt";
     readonly status: "status";
-    readonly reportedAt: "reportedAt";
-    readonly resolvedAt: "resolvedAt";
+    readonly result: "result";
     readonly notes: "notes";
-    readonly customerId: "customerId";
-    readonly extinguisherId: "extinguisherId";
+    readonly completedAt: "completedAt";
     readonly createdAt: "createdAt";
     readonly updatedAt: "updatedAt";
 };
-export type EscalationScalarFieldEnum = (typeof EscalationScalarFieldEnum)[keyof typeof EscalationScalarFieldEnum];
+export type InspectionScalarFieldEnum = (typeof InspectionScalarFieldEnum)[keyof typeof InspectionScalarFieldEnum];
+export declare const MaintenanceLogScalarFieldEnum: {
+    readonly id: "id";
+    readonly extinguisherId: "extinguisherId";
+    readonly inspectorId: "inspectorId";
+    readonly inspectionId: "inspectionId";
+    readonly actionsTaken: "actionsTaken";
+    readonly conditionNoted: "conditionNoted";
+    readonly actionDate: "actionDate";
+    readonly createdAt: "createdAt";
+};
+export type MaintenanceLogScalarFieldEnum = (typeof MaintenanceLogScalarFieldEnum)[keyof typeof MaintenanceLogScalarFieldEnum];
+export declare const NotificationScalarFieldEnum: {
+    readonly id: "id";
+    readonly userId: "userId";
+    readonly extinguisherId: "extinguisherId";
+    readonly type: "type";
+    readonly channel: "channel";
+    readonly message: "message";
+    readonly isRead: "isRead";
+    readonly sentAt: "sentAt";
+};
+export type NotificationScalarFieldEnum = (typeof NotificationScalarFieldEnum)[keyof typeof NotificationScalarFieldEnum];
 export declare const SortOrder: {
     readonly asc: "asc";
     readonly desc: "desc";

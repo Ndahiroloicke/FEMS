@@ -1,11 +1,13 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import helmet from 'helmet';
 import { AppModule } from './app.module.js';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  app.use(helmet());
   app.setGlobalPrefix('api');
   app.useGlobalPipes(
     new ValidationPipe({
@@ -21,17 +23,19 @@ async function bootstrap() {
   });
 
   const swaggerConfig = new DocumentBuilder()
-    .setTitle('Fire Extinguisher Management API')
+    .setTitle('Fire Extinguisher Management System (FEMS) API')
     .setDescription(
-      'API for managing fire extinguisher sales, expiry tracking, customer notifications, and police escalations.',
+      'API for managing fire extinguishers, inspections, maintenance, reporting, notifications, and user access control.',
     )
-    .setVersion('1.0')
-    .addTag('Customers')
-    .addTag('Fire Extinguishers')
+    .setVersion('2.0')
+    .addBearerAuth()
+    .addTag('Auth')
+    .addTag('Users')
+    .addTag('Extinguishers')
+    .addTag('Inspections')
+    .addTag('Maintenance')
+    .addTag('Reports')
     .addTag('Notifications')
-    .addTag('Escalations')
-    .addTag('Compliance')
-    .addTag('Dashboard')
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);
@@ -42,4 +46,4 @@ async function bootstrap() {
   console.log(`API running on http://localhost:${port}`);
   console.log(`Swagger docs at http://localhost:${port}/api/docs`);
 }
-bootstrap();
+void bootstrap();

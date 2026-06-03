@@ -8,15 +8,23 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
+const core_1 = require("@nestjs/core");
 const config_1 = require("@nestjs/config");
 const schedule_1 = require("@nestjs/schedule");
-const compliance_module_js_1 = require("./compliance/compliance.module.js");
-const customers_module_js_1 = require("./customers/customers.module.js");
-const dashboard_module_js_1 = require("./dashboard/dashboard.module.js");
-const escalations_module_js_1 = require("./escalations/escalations.module.js");
+const throttler_1 = require("@nestjs/throttler");
+const auth_module_js_1 = require("./auth/auth.module.js");
+const all_exceptions_filter_js_1 = require("./common/filters/all-exceptions.filter.js");
+const jwt_auth_guard_js_1 = require("./common/guards/jwt-auth.guard.js");
+const logging_interceptor_js_1 = require("./common/interceptors/logging.interceptor.js");
 const extinguishers_module_js_1 = require("./extinguishers/extinguishers.module.js");
+const inspections_module_js_1 = require("./inspections/inspections.module.js");
+const mailer_module_js_1 = require("./mailer/mailer.module.js");
+const maintenance_module_js_1 = require("./maintenance/maintenance.module.js");
 const notifications_module_js_1 = require("./notifications/notifications.module.js");
 const prisma_module_js_1 = require("./prisma/prisma.module.js");
+const reports_module_js_1 = require("./reports/reports.module.js");
+const tasks_module_js_1 = require("./tasks/tasks.module.js");
+const users_module_js_1 = require("./users/users.module.js");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -25,13 +33,23 @@ exports.AppModule = AppModule = __decorate([
         imports: [
             config_1.ConfigModule.forRoot({ isGlobal: true }),
             schedule_1.ScheduleModule.forRoot(),
+            throttler_1.ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 100 }]),
             prisma_module_js_1.PrismaModule,
-            customers_module_js_1.CustomersModule,
-            extinguishers_module_js_1.ExtinguishersModule,
+            mailer_module_js_1.MailerModule,
             notifications_module_js_1.NotificationsModule,
-            escalations_module_js_1.EscalationsModule,
-            compliance_module_js_1.ComplianceModule,
-            dashboard_module_js_1.DashboardModule,
+            auth_module_js_1.AuthModule,
+            users_module_js_1.UsersModule,
+            extinguishers_module_js_1.ExtinguishersModule,
+            inspections_module_js_1.InspectionsModule,
+            maintenance_module_js_1.MaintenanceModule,
+            reports_module_js_1.ReportsModule,
+            tasks_module_js_1.TasksModule,
+        ],
+        providers: [
+            { provide: core_1.APP_GUARD, useClass: jwt_auth_guard_js_1.JwtAuthGuard },
+            { provide: core_1.APP_GUARD, useClass: throttler_1.ThrottlerGuard },
+            { provide: core_1.APP_FILTER, useClass: all_exceptions_filter_js_1.AllExceptionsFilter },
+            { provide: core_1.APP_INTERCEPTOR, useClass: logging_interceptor_js_1.LoggingInterceptor },
         ],
     })
 ], AppModule);

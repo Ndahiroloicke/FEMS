@@ -15,38 +15,63 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.NotificationsController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
+const current_user_decorator_js_1 = require("../common/decorators/current-user.decorator.js");
+const pagination_dto_js_1 = require("../common/dto/pagination.dto.js");
 const notifications_service_js_1 = require("./notifications.service.js");
+const class_validator_1 = require("class-validator");
+class ListNotificationsDto extends pagination_dto_js_1.PaginationDto {
+}
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBooleanString)(),
+    __metadata("design:type", String)
+], ListNotificationsDto.prototype, "isRead", void 0);
 let NotificationsController = class NotificationsController {
     constructor(notificationsService) {
         this.notificationsService = notificationsService;
     }
-    findAll(customerId) {
-        return this.notificationsService.findAll(customerId);
+    findAll(userId, query) {
+        const isRead = query.isRead === undefined ? undefined : query.isRead === 'true';
+        return this.notificationsService.findForUser(userId, query.page, query.limit, isRead);
     }
-    findOne(id) {
-        return this.notificationsService.findOne(id);
+    markAllRead(userId) {
+        return this.notificationsService.markAllRead(userId);
+    }
+    markRead(id, userId) {
+        return this.notificationsService.markRead(id, userId);
     }
 };
 exports.NotificationsController = NotificationsController;
 __decorate([
     (0, common_1.Get)(),
-    (0, swagger_1.ApiOperation)({ summary: 'List sent notifications' }),
-    (0, swagger_1.ApiQuery)({ name: 'customerId', required: false }),
-    __param(0, (0, common_1.Query)('customerId')),
+    (0, swagger_1.ApiOperation)({ summary: 'List the current user notifications (paginated)' }),
+    (0, swagger_1.ApiQuery)({ name: 'isRead', required: false, type: Boolean }),
+    __param(0, (0, current_user_decorator_js_1.CurrentUser)('id')),
+    __param(1, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, ListNotificationsDto]),
     __metadata("design:returntype", void 0)
 ], NotificationsController.prototype, "findAll", null);
 __decorate([
-    (0, common_1.Get)(':id'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get notification details' }),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Patch)('read-all'),
+    (0, swagger_1.ApiOperation)({ summary: 'Mark all notifications as read' }),
+    __param(0, (0, current_user_decorator_js_1.CurrentUser)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
-], NotificationsController.prototype, "findOne", null);
+], NotificationsController.prototype, "markAllRead", null);
+__decorate([
+    (0, common_1.Patch)(':id/read'),
+    (0, swagger_1.ApiOperation)({ summary: 'Mark a notification as read' }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, current_user_decorator_js_1.CurrentUser)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], NotificationsController.prototype, "markRead", null);
 exports.NotificationsController = NotificationsController = __decorate([
     (0, swagger_1.ApiTags)('Notifications'),
+    (0, swagger_1.ApiBearerAuth)(),
     (0, common_1.Controller)('notifications'),
     __metadata("design:paramtypes", [notifications_service_js_1.NotificationsService])
 ], NotificationsController);

@@ -9,10 +9,11 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CreateExtinguisherDto = void 0;
+exports.CreateExtinguisherDto = exports.EXTINGUISHER_SIZES = void 0;
 const swagger_1 = require("@nestjs/swagger");
-const client_1 = require("../../generated/prisma/client");
 const class_validator_1 = require("class-validator");
+const prisma_enums_js_1 = require("../../common/prisma-enums.js");
+exports.EXTINGUISHER_SIZES = ['2.5lbs', '5lbs', '9lbs', '12lbs'];
 class CreateExtinguisherDto {
 }
 exports.CreateExtinguisherDto = CreateExtinguisherDto;
@@ -23,36 +24,38 @@ __decorate([
     __metadata("design:type", String)
 ], CreateExtinguisherDto.prototype, "serialNumber", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'uuid-of-customer' }),
-    (0, class_validator_1.IsUUID)(),
+    (0, swagger_1.ApiProperty)({ example: 'Building A — Floor 2 Corridor' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
-], CreateExtinguisherDto.prototype, "customerId", void 0);
+], CreateExtinguisherDto.prototype, "location", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ enum: prisma_enums_js_1.ExtinguisherType, example: prisma_enums_js_1.ExtinguisherType.CO2 }),
+    (0, class_validator_1.IsEnum)(prisma_enums_js_1.ExtinguisherType),
+    __metadata("design:type", String)
+], CreateExtinguisherDto.prototype, "type", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ enum: exports.EXTINGUISHER_SIZES, example: '5lbs' }),
+    (0, class_validator_1.IsIn)(exports.EXTINGUISHER_SIZES),
+    __metadata("design:type", String)
+], CreateExtinguisherDto.prototype, "size", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ example: '2024-01-15' }),
     (0, class_validator_1.IsDateString)(),
     __metadata("design:type", String)
-], CreateExtinguisherDto.prototype, "purchaseDate", void 0);
+], CreateExtinguisherDto.prototype, "installationDate", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ example: '2025-01-15' }),
     (0, class_validator_1.IsDateString)(),
     __metadata("design:type", String)
 ], CreateExtinguisherDto.prototype, "expiryDate", void 0);
 __decorate([
-    (0, swagger_1.ApiPropertyOptional)({ example: 'ABC Dry Powder' }),
+    (0, swagger_1.ApiPropertyOptional)({
+        enum: prisma_enums_js_1.ExtinguisherStatus,
+        default: prisma_enums_js_1.ExtinguisherStatus.ACTIVE,
+    }),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], CreateExtinguisherDto.prototype, "type", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({ example: '6kg' }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], CreateExtinguisherDto.prototype, "capacity", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({ enum: client_1.ExtinguisherStatus, default: client_1.ExtinguisherStatus.ACTIVE }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsEnum)(client_1.ExtinguisherStatus),
+    (0, class_validator_1.IsEnum)(prisma_enums_js_1.ExtinguisherStatus),
     __metadata("design:type", String)
 ], CreateExtinguisherDto.prototype, "status", void 0);
 //# sourceMappingURL=create-extinguisher.dto.js.map

@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.defineExtension = exports.NullsOrder = exports.QueryMode = exports.SortOrder = exports.EscalationScalarFieldEnum = exports.NotificationScalarFieldEnum = exports.FireExtinguisherScalarFieldEnum = exports.CustomerScalarFieldEnum = exports.TransactionIsolationLevel = exports.ModelName = exports.AnyNull = exports.JsonNull = exports.DbNull = exports.NullTypes = exports.prismaVersion = exports.getExtensionContext = exports.Decimal = exports.Sql = exports.raw = exports.join = exports.empty = exports.sql = exports.PrismaClientValidationError = exports.PrismaClientInitializationError = exports.PrismaClientRustPanicError = exports.PrismaClientUnknownRequestError = exports.PrismaClientKnownRequestError = void 0;
+exports.defineExtension = exports.NullsOrder = exports.QueryMode = exports.SortOrder = exports.NotificationScalarFieldEnum = exports.MaintenanceLogScalarFieldEnum = exports.InspectionScalarFieldEnum = exports.FireExtinguisherScalarFieldEnum = exports.UserScalarFieldEnum = exports.TransactionIsolationLevel = exports.ModelName = exports.AnyNull = exports.JsonNull = exports.DbNull = exports.NullTypes = exports.prismaVersion = exports.getExtensionContext = exports.Decimal = exports.Sql = exports.raw = exports.join = exports.empty = exports.sql = exports.PrismaClientValidationError = exports.PrismaClientInitializationError = exports.PrismaClientRustPanicError = exports.PrismaClientUnknownRequestError = exports.PrismaClientKnownRequestError = void 0;
 const runtime = __importStar(require("@prisma/client/runtime/client"));
 exports.PrismaClientKnownRequestError = runtime.PrismaClientKnownRequestError;
 exports.PrismaClientUnknownRequestError = runtime.PrismaClientUnknownRequestError;
@@ -60,10 +60,11 @@ exports.DbNull = runtime.DbNull;
 exports.JsonNull = runtime.JsonNull;
 exports.AnyNull = runtime.AnyNull;
 exports.ModelName = {
-    Customer: 'Customer',
+    User: 'User',
     FireExtinguisher: 'FireExtinguisher',
-    Notification: 'Notification',
-    Escalation: 'Escalation'
+    Inspection: 'Inspection',
+    MaintenanceLog: 'MaintenanceLog',
+    Notification: 'Notification'
 };
 exports.TransactionIsolationLevel = runtime.makeStrictEnum({
     ReadUncommitted: 'ReadUncommitted',
@@ -71,48 +72,63 @@ exports.TransactionIsolationLevel = runtime.makeStrictEnum({
     RepeatableRead: 'RepeatableRead',
     Serializable: 'Serializable'
 });
-exports.CustomerScalarFieldEnum = {
+exports.UserScalarFieldEnum = {
     id: 'id',
-    fullName: 'fullName',
-    nationalId: 'nationalId',
+    firstName: 'firstName',
+    lastName: 'lastName',
     email: 'email',
-    phone: 'phone',
-    address: 'address',
+    passwordHash: 'passwordHash',
+    role: 'role',
+    isActive: 'isActive',
+    resetToken: 'resetToken',
+    resetTokenExpiresAt: 'resetTokenExpiresAt',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
 };
 exports.FireExtinguisherScalarFieldEnum = {
     id: 'id',
     serialNumber: 'serialNumber',
+    location: 'location',
     type: 'type',
-    capacity: 'capacity',
-    purchaseDate: 'purchaseDate',
+    size: 'size',
+    installationDate: 'installationDate',
     expiryDate: 'expiryDate',
     status: 'status',
-    customerId: 'customerId',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
+};
+exports.InspectionScalarFieldEnum = {
+    id: 'id',
+    extinguisherId: 'extinguisherId',
+    scheduledById: 'scheduledById',
+    inspectorId: 'inspectorId',
+    scheduledAt: 'scheduledAt',
+    status: 'status',
+    result: 'result',
+    notes: 'notes',
+    completedAt: 'completedAt',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+};
+exports.MaintenanceLogScalarFieldEnum = {
+    id: 'id',
+    extinguisherId: 'extinguisherId',
+    inspectorId: 'inspectorId',
+    inspectionId: 'inspectionId',
+    actionsTaken: 'actionsTaken',
+    conditionNoted: 'conditionNoted',
+    actionDate: 'actionDate',
+    createdAt: 'createdAt'
 };
 exports.NotificationScalarFieldEnum = {
     id: 'id',
+    userId: 'userId',
+    extinguisherId: 'extinguisherId',
     type: 'type',
     channel: 'channel',
     message: 'message',
-    sentAt: 'sentAt',
-    customerId: 'customerId',
-    extinguisherId: 'extinguisherId'
-};
-exports.EscalationScalarFieldEnum = {
-    id: 'id',
-    reason: 'reason',
-    status: 'status',
-    reportedAt: 'reportedAt',
-    resolvedAt: 'resolvedAt',
-    notes: 'notes',
-    customerId: 'customerId',
-    extinguisherId: 'extinguisherId',
-    createdAt: 'createdAt',
-    updatedAt: 'updatedAt'
+    isRead: 'isRead',
+    sentAt: 'sentAt'
 };
 exports.SortOrder = {
     asc: 'asc',

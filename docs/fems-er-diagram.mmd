@@ -1,0 +1,75 @@
+%% Fire Extinguisher Management System (FEMS) — Database Model (ER Diagram)
+%% Paste into https://mermaid.live or any Mermaid renderer.
+
+erDiagram
+  USER ||--o{ INSPECTION : "schedules (scheduledBy)"
+  USER ||--o{ INSPECTION : "assigned (inspector)"
+  USER ||--o{ MAINTENANCE_LOG : "logs"
+  USER ||--o{ NOTIFICATION : "receives"
+  FIRE_EXTINGUISHER ||--o{ INSPECTION : "has"
+  FIRE_EXTINGUISHER ||--o{ MAINTENANCE_LOG : "has"
+  FIRE_EXTINGUISHER ||--o{ NOTIFICATION : "subject of"
+  INSPECTION ||--o{ MAINTENANCE_LOG : "results in"
+
+  USER {
+    uuid     id PK
+    string   firstName
+    string   lastName
+    string   email UK
+    string   passwordHash
+    enum     role "ADMIN | INSPECTOR | USER"
+    boolean  isActive
+    string   resetToken "nullable"
+    datetime resetTokenExpiresAt "nullable"
+    datetime createdAt
+    datetime updatedAt
+  }
+
+  FIRE_EXTINGUISHER {
+    uuid     id PK
+    string   serialNumber UK
+    string   location
+    enum     type "WATER | CO2 | FOAM | DRY_CHEMICAL"
+    string   size
+    datetime installationDate
+    datetime expiryDate
+    enum     status "ACTIVE | EXPIRED | NEEDS_MAINTENANCE | OUT_OF_SERVICE"
+    datetime createdAt
+    datetime updatedAt
+  }
+
+  INSPECTION {
+    uuid     id PK
+    uuid     extinguisherId FK
+    uuid     scheduledById FK
+    uuid     inspectorId FK "nullable"
+    datetime scheduledAt
+    enum     status "SCHEDULED | IN_PROGRESS | COMPLETED | CANCELLED | OVERDUE"
+    string   result "nullable"
+    string   notes "nullable"
+    datetime completedAt "nullable"
+    datetime createdAt
+    datetime updatedAt
+  }
+
+  MAINTENANCE_LOG {
+    uuid     id PK
+    uuid     extinguisherId FK
+    uuid     inspectorId FK
+    uuid     inspectionId FK "nullable"
+    string   actionsTaken
+    enum     conditionNoted "GOOD | FAIR | POOR | DAMAGED | NEEDS_REPLACEMENT"
+    datetime actionDate
+    datetime createdAt
+  }
+
+  NOTIFICATION {
+    uuid     id PK
+    uuid     userId FK
+    uuid     extinguisherId FK "nullable"
+    enum     type "INSPECTION_SCHEDULED | INSPECTION_REMINDER | EXPIRY_WARNING | MAINTENANCE_LOGGED | ACCOUNT"
+    enum     channel "EMAIL | SYSTEM"
+    string   message
+    boolean  isRead
+    datetime sentAt
+  }

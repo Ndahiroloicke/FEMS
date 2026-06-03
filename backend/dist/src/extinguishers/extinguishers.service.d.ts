@@ -1,184 +1,86 @@
-import { ExtinguisherStatus } from '../generated/prisma/client';
+import { type PaginatedResult } from '../common/dto/pagination.dto.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateExtinguisherDto } from './dto/create-extinguisher.dto.js';
+import { QueryExtinguisherDto } from './dto/query-extinguisher.dto.js';
 import { UpdateExtinguisherDto } from './dto/update-extinguisher.dto.js';
 export declare class ExtinguishersService {
     private readonly prisma;
     constructor(prisma: PrismaService);
+    private assertDateOrder;
     create(dto: CreateExtinguisherDto): Promise<{
-        customer: {
-            id: string;
-            fullName: string;
-            nationalId: string;
-            email: string | null;
-            phone: string;
-            address: string | null;
-            createdAt: Date;
-            updatedAt: Date;
-        };
-    } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
         serialNumber: string;
-        type: string | null;
-        capacity: string | null;
-        purchaseDate: Date;
+        type: import("../common/prisma-enums.js").ExtinguisherType;
         expiryDate: Date;
-        status: ExtinguisherStatus;
-        customerId: string;
+        status: import("../common/prisma-enums.js").ExtinguisherStatus;
+        location: string;
+        size: string;
+        installationDate: Date;
     }>;
-    findAll(filters?: {
-        status?: ExtinguisherStatus;
-        customerId?: string;
-        expiringWithinDays?: number;
-    }): import("../generated/prisma/internal/prismaNamespace").PrismaPromise<({
-        customer: {
-            id: string;
-            fullName: string;
-            nationalId: string;
-            email: string | null;
-            phone: string;
-            address: string | null;
-            createdAt: Date;
-            updatedAt: Date;
-        };
-    } & {
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        serialNumber: string;
-        type: string | null;
-        capacity: string | null;
-        purchaseDate: Date;
-        expiryDate: Date;
-        status: ExtinguisherStatus;
-        customerId: string;
-    })[]>;
+    findAll(query: QueryExtinguisherDto): Promise<PaginatedResult<unknown>>;
     findOne(id: string): Promise<{
-        customer: {
-            id: string;
-            fullName: string;
-            nationalId: string;
-            email: string | null;
-            phone: string;
-            address: string | null;
-            createdAt: Date;
-            updatedAt: Date;
-        };
-        notifications: {
-            id: string;
-            type: import("../generated/prisma/enums").NotificationType;
-            customerId: string;
-            channel: import("../generated/prisma/enums").NotificationChannel;
-            message: string;
-            sentAt: Date;
-            extinguisherId: string;
-        }[];
-        escalations: {
+        maintenanceLogs: ({
+            inspector: {
+                id: string;
+                firstName: string;
+                lastName: string;
+            };
+        } & {
             id: string;
             createdAt: Date;
-            updatedAt: Date;
-            status: import("../generated/prisma/enums").EscalationStatus;
-            customerId: string;
             extinguisherId: string;
-            reason: string;
-            reportedAt: Date | null;
-            resolvedAt: Date | null;
+            inspectorId: string;
+            inspectionId: string | null;
+            actionsTaken: string;
+            conditionNoted: import("../common/prisma-enums.js").MaintenanceCondition;
+            actionDate: Date;
+        })[];
+        inspections: ({
+            inspector: {
+                id: string;
+                firstName: string;
+                lastName: string;
+            } | null;
+        } & {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            status: import("../common/prisma-enums.js").InspectionStatus;
+            extinguisherId: string;
             notes: string | null;
-        }[];
+            scheduledById: string;
+            inspectorId: string | null;
+            scheduledAt: Date;
+            result: string | null;
+            completedAt: Date | null;
+        })[];
     } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
         serialNumber: string;
-        type: string | null;
-        capacity: string | null;
-        purchaseDate: Date;
+        type: import("../common/prisma-enums.js").ExtinguisherType;
         expiryDate: Date;
-        status: ExtinguisherStatus;
-        customerId: string;
+        status: import("../common/prisma-enums.js").ExtinguisherStatus;
+        location: string;
+        size: string;
+        installationDate: Date;
     }>;
     update(id: string, dto: UpdateExtinguisherDto): Promise<{
-        customer: {
-            id: string;
-            fullName: string;
-            nationalId: string;
-            email: string | null;
-            phone: string;
-            address: string | null;
-            createdAt: Date;
-            updatedAt: Date;
-        };
-    } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
         serialNumber: string;
-        type: string | null;
-        capacity: string | null;
-        purchaseDate: Date;
+        type: import("../common/prisma-enums.js").ExtinguisherType;
         expiryDate: Date;
-        status: ExtinguisherStatus;
-        customerId: string;
+        status: import("../common/prisma-enums.js").ExtinguisherStatus;
+        location: string;
+        size: string;
+        installationDate: Date;
     }>;
-    markDelivered(id: string): Promise<{
-        customer: {
-            id: string;
-            fullName: string;
-            nationalId: string;
-            email: string | null;
-            phone: string;
-            address: string | null;
-            createdAt: Date;
-            updatedAt: Date;
-        };
-    } & {
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        serialNumber: string;
-        type: string | null;
-        capacity: string | null;
-        purchaseDate: Date;
-        expiryDate: Date;
-        status: ExtinguisherStatus;
-        customerId: string;
-    }>;
-    markReturned(id: string): Promise<{
-        customer: {
-            id: string;
-            fullName: string;
-            nationalId: string;
-            email: string | null;
-            phone: string;
-            address: string | null;
-            createdAt: Date;
-            updatedAt: Date;
-        };
-    } & {
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        serialNumber: string;
-        type: string | null;
-        capacity: string | null;
-        purchaseDate: Date;
-        expiryDate: Date;
-        status: ExtinguisherStatus;
-        customerId: string;
-    }>;
-    private updateStatus;
     remove(id: string): Promise<{
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        serialNumber: string;
-        type: string | null;
-        capacity: string | null;
-        purchaseDate: Date;
-        expiryDate: Date;
-        status: ExtinguisherStatus;
-        customerId: string;
+        message: string;
     }>;
 }

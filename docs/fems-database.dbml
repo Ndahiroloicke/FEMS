@@ -1,12 +1,25 @@
+// Fire Extinguisher Management System (FEMS) — Database Model
+// DBML — paste into https://dbdiagram.io
+// DBMS: PostgreSQL. RESTful monolithic API (NestJS + Prisma).
 
+Enum role { ADMIN INSPECTOR USER }
+Enum extinguisher_type { WATER CO2 FOAM DRY_CHEMICAL }
+Enum extinguisher_status { ACTIVE EXPIRED NEEDS_MAINTENANCE OUT_OF_SERVICE }
+Enum inspection_status { SCHEDULED IN_PROGRESS COMPLETED CANCELLED OVERDUE }
+Enum maintenance_condition { GOOD FAIR POOR DAMAGED NEEDS_REPLACEMENT }
+Enum notification_type { INSPECTION_SCHEDULED INSPECTION_REMINDER EXPIRY_WARNING MAINTENANCE_LOGGED ACCOUNT }
+Enum notification_channel { EMAIL SYSTEM }
 
-Table customers {
+Table users {
   id varchar [primary key, note: 'UUID']
-  full_name varchar [not null]
-  national_id varchar [unique, not null, note: 'Government ID number']
-  email varchar [note: 'Optional contact email']
-  phone varchar [not null]
-  address varchar
+  first_name varchar [not null]
+  last_name varchar [not null]
+  email varchar [unique, not null]
+  password_hash varchar [not null, note: 'bcrypt hash']
+  role role [not null, default: 'USER']
+  is_active boolean [not null, default: true]
+  reset_token varchar [note: 'password recovery token']
+  reset_token_expires_at timestamp
   created_at timestamp [default: `now()`]
   updated_at timestamp [not null]
 }
@@ -14,66 +27,60 @@ Table customers {
 Table fire_extinguishers {
   id varchar [primary key, note: 'UUID']
   serial_number varchar [unique, not null]
-  type varchar [note: 'e.g. ABC Dry Powder']
-  capacity varchar [note: 'e.g. 6kg']
-  purchase_date timestamp [not null]
+  location varchar [not null]
+  type extinguisher_type [not null]
+  size varchar [not null, note: 'e.g. 6kg']
+  installation_date timestamp [not null]
   expiry_date timestamp [not null]
-  status varchar [not null, default: 'ACTIVE', note: 'ACTIVE | DELIVERED | RETURNED | EXPIRED']
-  customer_id varchar [not null]
+  status extinguisher_status [not null, default: 'ACTIVE']
   created_at timestamp [default: `now()`]
   updated_at timestamp [not null]
+}
+
+Table inspections {
+  id varchar [primary key, note: 'UUID']
+  extinguisher_id varchar [not null]
+  scheduled_by_id varchar [not null, note: 'user who scheduled it']
+  inspector_id varchar [note: 'assigned inspector (nullable)']
+  scheduled_at timestamp [not null]
+  status inspection_status [not null, default: 'SCHEDULED']
+  result text
+  notes text
+  completed_at timestamp
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [not null]
+}
+
+Table maintenance_logs {
+  id varchar [primary key, note: 'UUID']
+  extinguisher_id varchar [not null]
+  inspector_id varchar [not null]
+  inspection_id varchar [note: 'optional link to inspection']
+  actions_taken text [not null]
+  condition_noted maintenance_condition [not null]
+  action_date timestamp [not null]
+  created_at timestamp [default: `now()`]
 }
 
 Table notifications {
   id varchar [primary key, note: 'UUID']
-  type varchar [not null, note: 'EXPIRY_WARNING | POLICE_ESCALATION']
-  channel varchar [not null, default: 'SYSTEM', note: 'EMAIL | SMS | SYSTEM']
+  user_id varchar [not null]
+  extinguisher_id varchar [note: 'nullable']
+  type notification_type [not null]
+  channel notification_channel [not null, default: 'SYSTEM']
   message text [not null]
+  is_read boolean [not null, default: false]
   sent_at timestamp [default: `now()`]
-  customer_id varchar [not null]
-  extinguisher_id varchar [not null]
-}
-
-Table escalations {
-  id varchar [primary key, note: 'UUID']
-  reason text [not null, note: 'Why police follow-up is required']
-  status varchar [not null, default: 'PENDING', note: 'PENDING | REPORTED | RESOLVED']
-  reported_at timestamp [note: 'When staff confirmed police were informed']
-  resolved_at timestamp [note: 'When case was closed']
-  notes text [note: 'Staff notes e.g. police ref number']
-  customer_id varchar [not null]
-  extinguisher_id varchar [not null]
-  created_at timestamp [default: `now()`]
-  updated_at timestamp [not null]
 }
 
 // Relationships
-Ref: fire_extinguishers.customer_id > customers.id [delete: cascade]
+Ref: inspections.extinguisher_id > fire_extinguishers.id [delete: cascade]
+Ref: inspections.scheduled_by_id > users.id
+Ref: inspections.inspector_id > users.id
 
-Ref: notifications.customer_id > customers.id [delete: cascade]
-Ref: notifications.extinguisher_id > fire_extinguishers.id [delete: cascade]
+Ref: maintenance_logs.extinguisher_id > fire_extinguishers.id [delete: cascade]
+Ref: maintenance_logs.inspector_id > users.id
+Ref: maintenance_logs.inspection_id > inspections.id
 
-Ref: escalations.customer_id > customers.id [delete: cascade]
-Ref: escalations.extinguisher_id > fire_extinguishers.id [delete: cascade]
-
-// Sample data
-Records customers(id, full_name, national_id, email, phone, address) {
-  'c1111111-1111-1111-1111-111111111111', 'Jean Mukamana', '1199080012345678', 'jean.m@example.com', '+250788100001', '12 KN 4 Ave, Kigali'
-  'c2222222-2222-2222-2222-222222222222', 'Paul Nshuti', '1199080098765432', null, '+250788100002', '45 KG 7 St, Kigali'
-  'c3333333-3333-3333-3333-333333333333', 'Marie Uwase', '1199080055555555', 'marie.u@example.com', '+250788100003', null
-}
-
-Records fire_extinguishers(id, serial_number, type, capacity, purchase_date, expiry_date, status, customer_id) {
-  'e1111111-1111-1111-1111-111111111111', 'FE-2024-001234', 'ABC Dry Powder', '6kg', '2024-01-15', '2025-01-15', 'RETURNED', 'c1111111-1111-1111-1111-111111111111'
-  'e2222222-2222-2222-2222-222222222222', 'FE-2024-005678', 'CO2', '5kg', '2024-06-01', '2025-06-01', 'DELIVERED', 'c2222222-2222-2222-2222-222222222222'
-  'e3333333-3333-3333-3333-333333333333', 'FE-2023-009999', 'ABC Dry Powder', '9kg', '2023-03-10', '2024-03-10', 'EXPIRED', 'c3333333-3333-3333-3333-333333333333'
-}
-
-Records notifications(id, type, channel, message, sent_at, customer_id, extinguisher_id) {
-  'n1111111-1111-1111-1111-111111111111', 'EXPIRY_WARNING', 'SYSTEM', 'Reminder: Fire extinguisher FE-2024-005678 expires in 14 day(s). Please return or renew.', '2025-05-18', 'c2222222-2222-2222-2222-222222222222', 'e2222222-2222-2222-2222-222222222222'
-  'n2222222-2222-2222-2222-222222222222', 'POLICE_ESCALATION', 'SYSTEM', 'Customer Marie Uwase has not returned fire extinguisher FE-2023-009999 after expiry. Police notification required.', '2024-03-11', 'c3333333-3333-3333-3333-333333333333', 'e3333333-3333-3333-3333-333333333333'
-}
-
-Records escalations(id, reason, status, reported_at, resolved_at, notes, customer_id, extinguisher_id) {
-  'x1111111-1111-1111-1111-111111111111', 'Customer Marie Uwase (ID: 1199080055555555) has not returned fire extinguisher FE-2023-009999 after expiry on 2024-03-10. Police notification required.', 'REPORTED', '2024-03-12', null, 'Contacted Kigali Central Police Station, ref #KP-2024-0312', 'c3333333-3333-3333-3333-333333333333', 'e3333333-3333-3333-3333-333333333333'
-}
+Ref: notifications.user_id > users.id [delete: cascade]
+Ref: notifications.extinguisher_id > fire_extinguishers.id [delete: set null]

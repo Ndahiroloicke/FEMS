@@ -1,58 +1,42 @@
+import { NotificationChannel, NotificationType } from '../common/prisma-enums.js';
+import { MailerService } from '../mailer/mailer.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { type PaginatedResult } from '../common/dto/pagination.dto.js';
+export interface CreateNotificationInput {
+    userId: string;
+    type: NotificationType;
+    message: string;
+    extinguisherId?: string | null;
+    emailSubject?: string;
+    sendEmail?: boolean;
+}
 export declare class NotificationsService {
     private readonly prisma;
-    constructor(prisma: PrismaService);
-    findAll(customerId?: string): import("../generated/prisma/internal/prismaNamespace.js").PrismaPromise<({
-        customer: {
-            fullName: string;
-            email: string | null;
-            phone: string;
-        };
-        extinguisher: {
-            serialNumber: string;
-            expiryDate: Date;
-        };
-    } & {
+    private readonly mailer;
+    constructor(prisma: PrismaService, mailer: MailerService);
+    createNotification(input: CreateNotificationInput): Promise<{
         id: string;
-        type: import("../common/prisma-enums.js").NotificationType;
-        customerId: string;
-        channel: import("../common/prisma-enums.js").NotificationChannel;
+        type: NotificationType;
+        channel: NotificationChannel;
         message: string;
         sentAt: Date;
-        extinguisherId: string;
-    })[]>;
-    findOne(id: string): import("../generated/prisma/models.js").Prisma__NotificationClient<{
-        customer: {
-            id: string;
-            fullName: string;
-            nationalId: string;
-            email: string | null;
-            phone: string;
-            address: string | null;
-            createdAt: Date;
-            updatedAt: Date;
-        };
-        extinguisher: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            serialNumber: string;
-            type: string | null;
-            capacity: string | null;
-            purchaseDate: Date;
-            expiryDate: Date;
-            status: import("../common/prisma-enums.js").ExtinguisherStatus;
-            customerId: string;
-        };
-    } & {
+        extinguisherId: string | null;
+        userId: string;
+        isRead: boolean;
+    }>;
+    notifyAdmins(input: Omit<CreateNotificationInput, 'userId'>): Promise<void>;
+    findForUser(userId: string, page?: number, limit?: number, isRead?: boolean): Promise<PaginatedResult<unknown>>;
+    markRead(id: string, userId: string): Promise<{
         id: string;
-        type: import("../common/prisma-enums.js").NotificationType;
-        customerId: string;
-        channel: import("../common/prisma-enums.js").NotificationChannel;
+        type: NotificationType;
+        channel: NotificationChannel;
         message: string;
         sentAt: Date;
-        extinguisherId: string;
-    }, never, import("@prisma/client/runtime/client.js").DefaultArgs, {
-        omit: import("../generated/prisma/internal/prismaNamespace.js").GlobalOmitConfig | undefined;
+        extinguisherId: string | null;
+        userId: string;
+        isRead: boolean;
+    }>;
+    markAllRead(userId: string): Promise<{
+        updated: number;
     }>;
 }

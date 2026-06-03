@@ -30,16 +30,19 @@ export interface PrismaClient<in LogOpts extends Prisma.LogLevel = never, in out
     $extends: runtime.Types.Extensions.ExtendsHook<"extends", Prisma.TypeMapCb<OmitOpts>, ExtArgs, runtime.Types.Utils.Call<Prisma.TypeMapCb<OmitOpts>, {
         extArgs: ExtArgs;
     }>>;
-    get customer(): Prisma.CustomerDelegate<ExtArgs, {
+    get user(): Prisma.UserDelegate<ExtArgs, {
         omit: OmitOpts;
     }>;
     get fireExtinguisher(): Prisma.FireExtinguisherDelegate<ExtArgs, {
         omit: OmitOpts;
     }>;
-    get notification(): Prisma.NotificationDelegate<ExtArgs, {
+    get inspection(): Prisma.InspectionDelegate<ExtArgs, {
         omit: OmitOpts;
     }>;
-    get escalation(): Prisma.EscalationDelegate<ExtArgs, {
+    get maintenanceLog(): Prisma.MaintenanceLogDelegate<ExtArgs, {
+        omit: OmitOpts;
+    }>;
+    get notification(): Prisma.NotificationDelegate<ExtArgs, {
         omit: OmitOpts;
     }>;
 }

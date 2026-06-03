@@ -11,65 +11,96 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ExtinguishersService = void 0;
 const common_1 = require("@nestjs/common");
-const client_1 = require("../generated/prisma/client");
+const pagination_dto_js_1 = require("../common/dto/pagination.dto.js");
 const prisma_service_js_1 = require("../prisma/prisma.service.js");
 let ExtinguishersService = class ExtinguishersService {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async create(dto) {
-        const customer = await this.prisma.customer.findUnique({
-            where: { id: dto.customerId },
-        });
-        if (!customer) {
-            throw new common_1.NotFoundException(`Customer ${dto.customerId} not found`);
+    assertDateOrder(installation, expiry) {
+        if (expiry <= installation) {
+            throw new common_1.BadRequestException('expiryDate must be after installationDate');
         }
+    }
+    async create(dto) {
         const existing = await this.prisma.fireExtinguisher.findUnique({
             where: { serialNumber: dto.serialNumber },
         });
         if (existing) {
             throw new common_1.ConflictException(`Extinguisher ${dto.serialNumber} is already registered`);
         }
+        const installationDate = new Date(dto.installationDate);
+        const expiryDate = new Date(dto.expiryDate);
+        this.assertDateOrder(installationDate, expiryDate);
         return this.prisma.fireExtinguisher.create({
             data: {
                 serialNumber: dto.serialNumber,
-                customerId: dto.customerId,
-                purchaseDate: new Date(dto.purchaseDate),
-                expiryDate: new Date(dto.expiryDate),
+                location: dto.location,
                 type: dto.type,
-                capacity: dto.capacity,
-                status: dto.status ?? client_1.ExtinguisherStatus.ACTIVE,
+                size: dto.size,
+                installationDate,
+                expiryDate,
+                status: dto.status ?? undefined,
             },
-            include: { customer: true },
         });
     }
-    findAll(filters) {
-        const now = new Date();
-        const expiryUpperBound = filters?.expiringWithinDays
-            ? new Date(now.getTime() + filters.expiringWithinDays * 24 * 60 * 60 * 1000)
-            : undefined;
-        return this.prisma.fireExtinguisher.findMany({
-            where: {
-                status: filters?.status,
-                customerId: filters?.customerId,
-                ...(expiryUpperBound
-                    ? {
-                        expiryDate: { lte: expiryUpperBound, gte: now },
-                        status: { not: client_1.ExtinguisherStatus.RETURNED },
-                    }
-                    : {}),
-            },
-            include: { customer: true },
-            orderBy: { expiryDate: 'asc' },
-        });
+    async findAll(query) {
+        const { skip, take, page, limit } = (0, pagination_dto_js_1.getSkipTake)(query.page, query.limit);
+        const where = {
+            ...(query.status ? { status: query.status } : {}),
+            ...(query.type ? { type: query.type } : {}),
+            ...(query.search
+                ? {
+                    OR: [
+                        {
+                            serialNumber: {
+                                contains: query.search,
+                                mode: 'insensitive',
+                            },
+                        },
+                        {
+                            location: {
+                                contains: query.search,
+                                mode: 'insensitive',
+                            },
+                        },
+                    ],
+                }
+                : {}),
+        };
+        const [data, total] = await Promise.all([
+            this.prisma.fireExtinguisher.findMany({
+                where,
+                orderBy: { createdAt: 'desc' },
+                skip,
+                take,
+            }),
+            this.prisma.fireExtinguisher.count({ where }),
+        ]);
+        return { data, meta: (0, pagination_dto_js_1.buildPaginationMeta)(total, page, limit) };
     }
     async findOne(id) {
         const extinguisher = await this.prisma.fireExtinguisher.findUnique({
             where: { id },
             include: {
-                customer: true,
-                notifications: { orderBy: { sentAt: 'desc' }, take: 10 },
-                escalations: { orderBy: { createdAt: 'desc' } },
+                inspections: {
+                    orderBy: { scheduledAt: 'desc' },
+                    take: 10,
+                    include: {
+                        inspector: {
+                            select: { id: true, firstName: true, lastName: true },
+                        },
+                    },
+                },
+                maintenanceLogs: {
+                    orderBy: { actionDate: 'desc' },
+                    take: 10,
+                    include: {
+                        inspector: {
+                            select: { id: true, firstName: true, lastName: true },
+                        },
+                    },
+                },
             },
         });
         if (!extinguisher) {
@@ -78,33 +109,49 @@ let ExtinguishersService = class ExtinguishersService {
         return extinguisher;
     }
     async update(id, dto) {
-        await this.findOne(id);
+        const current = await this.prisma.fireExtinguisher.findUnique({
+            where: { id },
+        });
+        if (!current) {
+            throw new common_1.NotFoundException(`Extinguisher ${id} not found`);
+        }
+        if (dto.serialNumber && dto.serialNumber !== current.serialNumber) {
+            const dup = await this.prisma.fireExtinguisher.findUnique({
+                where: { serialNumber: dto.serialNumber },
+            });
+            if (dup) {
+                throw new common_1.ConflictException(`Extinguisher ${dto.serialNumber} is already registered`);
+            }
+        }
+        const installationDate = dto.installationDate
+            ? new Date(dto.installationDate)
+            : current.installationDate;
+        const expiryDate = dto.expiryDate
+            ? new Date(dto.expiryDate)
+            : current.expiryDate;
+        this.assertDateOrder(installationDate, expiryDate);
         return this.prisma.fireExtinguisher.update({
             where: { id },
             data: {
-                ...dto,
-                expiryDate: dto.expiryDate ? new Date(dto.expiryDate) : undefined,
+                serialNumber: dto.serialNumber,
+                location: dto.location,
+                type: dto.type,
+                size: dto.size,
+                status: dto.status,
+                installationDate: dto.installationDate ? installationDate : undefined,
+                expiryDate: dto.expiryDate ? expiryDate : undefined,
             },
-            include: { customer: true },
-        });
-    }
-    async markDelivered(id) {
-        return this.updateStatus(id, client_1.ExtinguisherStatus.DELIVERED);
-    }
-    async markReturned(id) {
-        return this.updateStatus(id, client_1.ExtinguisherStatus.RETURNED);
-    }
-    async updateStatus(id, status) {
-        await this.findOne(id);
-        return this.prisma.fireExtinguisher.update({
-            where: { id },
-            data: { status },
-            include: { customer: true },
         });
     }
     async remove(id) {
-        await this.findOne(id);
-        return this.prisma.fireExtinguisher.delete({ where: { id } });
+        const current = await this.prisma.fireExtinguisher.findUnique({
+            where: { id },
+        });
+        if (!current) {
+            throw new common_1.NotFoundException(`Extinguisher ${id} not found`);
+        }
+        await this.prisma.fireExtinguisher.delete({ where: { id } });
+        return { message: 'Extinguisher deleted successfully' };
     }
 };
 exports.ExtinguishersService = ExtinguishersService;

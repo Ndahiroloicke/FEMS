@@ -8,91 +8,135 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Role {
+  ADMIN
+  INSPECTOR
+  USER
+}
+
+enum ExtinguisherType {
+  WATER
+  CO2
+  FOAM
+  DRY_CHEMICAL
+}
+
 enum ExtinguisherStatus {
   ACTIVE
-  DELIVERED
-  RETURNED
   EXPIRED
+  NEEDS_MAINTENANCE
+  OUT_OF_SERVICE
+}
+
+enum InspectionStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  OVERDUE
+}
+
+enum MaintenanceCondition {
+  GOOD
+  FAIR
+  POOR
+  DAMAGED
+  NEEDS_REPLACEMENT
 }
 
 enum NotificationType {
+  INSPECTION_SCHEDULED
+  INSPECTION_REMINDER
   EXPIRY_WARNING
-  POLICE_ESCALATION
+  MAINTENANCE_LOGGED
+  ACCOUNT
 }
 
 enum NotificationChannel {
   EMAIL
-  SMS
   SYSTEM
 }
 
-enum EscalationStatus {
-  PENDING
-  REPORTED
-  RESOLVED
-}
-
-model Customer {
-  id            String             @id @default(uuid())
-  fullName      String
-  nationalId    String             @unique
-  email         String?
-  phone         String
-  address       String?
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @updatedAt
-  extinguishers FireExtinguisher[]
+model User {
+  id String @id @default(uuid())
+  firstName String
+  lastName String
+  email String @unique
+  passwordHash String
+  role Role @default(USER)
+  isActive Boolean @default(true)
+  resetToken String?
+  resetTokenExpiresAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  scheduledInspections Inspection[] @relation("ScheduledBy")
+  assignedInspections Inspection[] @relation("Inspector")
+  maintenanceLogs MaintenanceLog[]
   notifications Notification[]
-  escalations   Escalation[]
-
-  @@map("customers")
+  @@map("users")
 }
 
 model FireExtinguisher {
-  id            String             @id @default(uuid())
-  serialNumber  String             @unique
-  type          String?
-  capacity      String?
-  purchaseDate  DateTime
-  expiryDate    DateTime
-  status        ExtinguisherStatus @default(ACTIVE)
-  customerId    String
-  customer      Customer           @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @updatedAt
+  id String @id @default(uuid())
+  serialNumber String @unique
+  location String
+  type ExtinguisherType
+  size String
+  installationDate DateTime
+  expiryDate DateTime
+  status ExtinguisherStatus @default(ACTIVE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  inspections Inspection[]
+  maintenanceLogs MaintenanceLog[]
   notifications Notification[]
-  escalations   Escalation[]
-
   @@map("fire_extinguishers")
 }
 
-model Notification {
-  id             String              @id @default(uuid())
-  type           NotificationType
-  channel        NotificationChannel @default(SYSTEM)
-  message        String
-  sentAt         DateTime            @default(now())
-  customerId     String
-  customer       Customer            @relation(fields: [customerId], references: [id], onDelete: Cascade)
+model Inspection {
+  id String @id @default(uuid())
   extinguisherId String
-  extinguisher   FireExtinguisher    @relation(fields: [extinguisherId], references: [id], onDelete: Cascade)
-
-  @@map("notifications")
+  extinguisher FireExtinguisher @relation(fields: [extinguisherId], references: [id], onDelete: Cascade)
+  scheduledById String
+  scheduledBy User @relation("ScheduledBy", fields: [scheduledById], references: [id])
+  inspectorId String?
+  inspector User? @relation("Inspector", fields: [inspectorId], references: [id])
+  scheduledAt DateTime
+  status InspectionStatus @default(SCHEDULED)
+  result String?
+  notes String?
+  completedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  maintenanceLogs MaintenanceLog[]
+  @@map("inspections")
 }
 
-model Escalation {
-  id             String           @id @default(uuid())
-  reason         String
-  status         EscalationStatus @default(PENDING)
-  reportedAt     DateTime?
-  resolvedAt     DateTime?
-  notes          String?
-  customerId     String
-  customer       Customer         @relation(fields: [customerId], references: [id], onDelete: Cascade)
+model MaintenanceLog {
+  id String @id @default(uuid())
   extinguisherId String
-  extinguisher   FireExtinguisher @relation(fields: [extinguisherId], references: [id], onDelete: Cascade)
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  extinguisher FireExtinguisher @relation(fields: [extinguisherId], references: [id], onDelete: Cascade)
+  inspectorId String
+  inspector User @relation(fields: [inspectorId], references: [id])
+  inspectionId String?
+  inspection Inspection? @relation(fields: [inspectionId], references: [id])
+  actionsTaken String
+  conditionNoted MaintenanceCondition
+  actionDate DateTime
+  createdAt DateTime @default(now())
+  @@map("maintenance_logs")
+}
 
-  @@map("escalations")
+model Notification {
+  id String @id @default(uuid())
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  extinguisherId String?
+  extinguisher FireExtinguisher? @relation(fields: [extinguisherId], references: [id], onDelete: SetNull)
+  type NotificationType
+  channel NotificationChannel @default(SYSTEM)
+  message String
+  isRead Boolean @default(false)
+  sentAt DateTime @default(now())
+  @@map("notifications")
 }

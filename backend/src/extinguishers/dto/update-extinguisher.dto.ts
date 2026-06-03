@@ -1,25 +1,4 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { ExtinguisherStatus } from '../../generated/prisma/client';
-import { IsDateString, IsEnum, IsOptional, IsString } from 'class-validator';
+import { PartialType } from '@nestjs/swagger';
+import { CreateExtinguisherDto } from './create-extinguisher.dto.js';
 
-export class UpdateExtinguisherDto {
-  @ApiPropertyOptional({ example: 'ABC Dry Powder' })
-  @IsOptional()
-  @IsString()
-  type?: string;
-
-  @ApiPropertyOptional({ example: '6kg' })
-  @IsOptional()
-  @IsString()
-  capacity?: string;
-
-  @ApiPropertyOptional({ example: '2025-01-15' })
-  @IsOptional()
-  @IsDateString()
-  expiryDate?: string;
-
-  @ApiPropertyOptional({ enum: ExtinguisherStatus })
-  @IsOptional()
-  @IsEnum(ExtinguisherStatus)
-  status?: ExtinguisherStatus;
-}
+export class UpdateExtinguisherDto extends PartialType(CreateExtinguisherDto) {}

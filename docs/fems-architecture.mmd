@@ -1,60 +1,63 @@
 %% Fire Extinguisher Management System (FEMS) — System Architecture
-%% Paste into https://mermaid.live or any Mermaid renderer
+%% RESTful (monolithic NestJS API — NOT microservices), per SRS.
+%% Paste into https://mermaid.live or any Mermaid renderer.
 
 flowchart TB
-  subgraph users["Users"]
-    staff["Company staff<br/>(operations / admin)"]
+  subgraph actors["Users / Roles"]
+    admin["Admin<br/>(manages system, users, data integrity)"]
+    inspector["Inspector<br/>(inspections, maintenance logs, scheduling)"]
+    user["User<br/>(views status, schedules inspections)"]
   end
 
-  subgraph client["Frontend — Next.js"]
-    web["Web app<br/>React · TypeScript · Tailwind<br/>:3000"]
-    pages["Pages<br/>Dashboard · Customers · Extinguishers<br/>Notifications · Escalations"]
-    web --> pages
+  subgraph client["Frontend — Next.js (React + Tailwind) :3000"]
+    auth_ui["Auth pages<br/>Register · Login · Forgot/Reset password"]
+    app_ui["App shell (role-aware nav)<br/>Dashboard · Extinguishers · Inspections<br/>Maintenance · Reports · Notifications · Users · Profile"]
+    apiclient["API client<br/>JWT in Authorization header"]
+    auth_ui --> apiclient
+    app_ui --> apiclient
   end
 
-  subgraph api["Backend — NestJS API"]
-    rest["REST API + Swagger<br/>/api · :3001"]
-    mod_cust["Customers module"]
-    mod_ext["Fire Extinguishers module"]
-    mod_notif["Notifications module"]
-    mod_esc["Escalations module"]
-    mod_comp["Compliance module"]
-    mod_dash["Dashboard module"]
-    cron["Scheduled job<br/>Daily 8:00 AM"]
-    rest --> mod_cust
-    rest --> mod_ext
-    rest --> mod_notif
-    rest --> mod_esc
-    rest --> mod_comp
-    rest --> mod_dash
-    cron --> mod_comp
+  subgraph api["Backend — NestJS RESTful API  /api  :3001"]
+    rest["REST controllers + Swagger /api/docs"]
+    subgraph sec["Cross-cutting"]
+      guard["JwtAuthGuard + RolesGuard<br/>(@Public / @Roles)"]
+      filt["Global exception filter<br/>+ logging interceptor"]
+      valid["ValidationPipe · Helmet · CORS · Throttler"]
+    end
+    mod_auth["Auth module<br/>register/login/logout<br/>forgot/reset password (JWT + bcrypt)"]
+    mod_users["Users module<br/>profile · password · admin user mgmt"]
+    mod_ext["Extinguishers module (CRUD)"]
+    mod_insp["Inspections module<br/>schedule + notify personnel"]
+    mod_maint["Maintenance module<br/>log actions / conditions"]
+    mod_rep["Reports module<br/>summary · stock · inspection status<br/>expired · maintenance history · CSV/PDF export"]
+    mod_notif["Notifications module<br/>in-app + email"]
+    cron["Scheduled job (daily)<br/>expiry → EXPIRED · reminders · overdue inspections"]
+    rest --> mod_auth & mod_users & mod_ext & mod_insp & mod_maint & mod_rep & mod_notif
+    rest --- sec
+    cron --> mod_ext
+    cron --> mod_notif
+    mod_insp --> mod_notif
+    mod_maint --> mod_notif
   end
 
-  subgraph data["Data layer"]
+  subgraph data["Data & integrations"]
     prisma["Prisma ORM"]
-    pg[("PostgreSQL<br/>customers · fire_extinguishers<br/>notifications · escalations")]
+    pg[("PostgreSQL<br/>users · fire_extinguishers · inspections<br/>maintenance_logs · notifications")]
+    smtp["SMTP / Email (nodemailer)"]
+    files["PDF (pdfkit) · CSV exports"]
     prisma --> pg
   end
 
-  subgraph future["Future integrations — not built yet"]
-    sms["SMS / Email provider"]
-    police["Police reporting API"]
-  end
+  admin & inspector & user -->|HTTPS| auth_ui
+  admin & inspector & user -->|HTTPS| app_ui
+  apiclient -->|REST JSON + Bearer JWT| rest
 
-  staff -->|"HTTPS"| web
-  pages -->|"REST JSON<br/>NEXT_PUBLIC_API_URL"| rest
-  mod_cust --> prisma
+  mod_auth --> prisma
+  mod_users --> prisma
   mod_ext --> prisma
+  mod_insp --> prisma
+  mod_maint --> prisma
+  mod_rep --> prisma
   mod_notif --> prisma
-  mod_esc --> prisma
-  mod_comp --> prisma
-  mod_dash --> prisma
-  mod_comp -.->|"planned"| sms
-  mod_esc -.->|"planned"| police
-
-  %% Business flows
-  staff -.->|"1. Register customer & sale"| pages
-  staff -.->|"2. Mark DELIVERED / RETURNED"| pages
-  cron -.->|"3. Expiry warnings"| mod_notif
-  cron -.->|"4. Create escalation if not returned"| mod_esc
-  staff -.->|"5. Report to police (internal record)"| pages
+  mod_notif --> smtp
+  mod_rep --> files

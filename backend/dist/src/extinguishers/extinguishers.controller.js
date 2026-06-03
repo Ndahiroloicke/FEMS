@@ -15,8 +15,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ExtinguishersController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
-const client_1 = require("../generated/prisma/client");
+const roles_decorator_js_1 = require("../common/decorators/roles.decorator.js");
+const roles_guard_js_1 = require("../common/guards/roles.guard.js");
+const prisma_enums_js_1 = require("../common/prisma-enums.js");
 const create_extinguisher_dto_js_1 = require("./dto/create-extinguisher.dto.js");
+const query_extinguisher_dto_js_1 = require("./dto/query-extinguisher.dto.js");
 const update_extinguisher_dto_js_1 = require("./dto/update-extinguisher.dto.js");
 const extinguishers_service_js_1 = require("./extinguishers.service.js");
 let ExtinguishersController = class ExtinguishersController {
@@ -26,26 +29,14 @@ let ExtinguishersController = class ExtinguishersController {
     create(dto) {
         return this.extinguishersService.create(dto);
     }
-    findAll(status, customerId, expiringWithinDays) {
-        return this.extinguishersService.findAll({
-            status,
-            customerId,
-            expiringWithinDays: expiringWithinDays
-                ? Number(expiringWithinDays)
-                : undefined,
-        });
+    findAll(query) {
+        return this.extinguishersService.findAll(query);
     }
     findOne(id) {
         return this.extinguishersService.findOne(id);
     }
     update(id, dto) {
         return this.extinguishersService.update(id, dto);
-    }
-    markDelivered(id) {
-        return this.extinguishersService.markDelivered(id);
-    }
-    markReturned(id) {
-        return this.extinguishersService.markReturned(id);
     }
     remove(id) {
         return this.extinguishersService.remove(id);
@@ -54,7 +45,8 @@ let ExtinguishersController = class ExtinguishersController {
 exports.ExtinguishersController = ExtinguishersController;
 __decorate([
     (0, common_1.Post)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Register a new fire extinguisher sale' }),
+    (0, roles_decorator_js_1.Roles)(prisma_enums_js_1.Role.ADMIN, prisma_enums_js_1.Role.INSPECTOR),
+    (0, swagger_1.ApiOperation)({ summary: 'Register a new fire extinguisher' }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [create_extinguisher_dto_js_1.CreateExtinguisherDto]),
@@ -62,15 +54,10 @@ __decorate([
 ], ExtinguishersController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
-    (0, swagger_1.ApiOperation)({ summary: 'List fire extinguishers' }),
-    (0, swagger_1.ApiQuery)({ name: 'status', required: false, enum: client_1.ExtinguisherStatus }),
-    (0, swagger_1.ApiQuery)({ name: 'customerId', required: false }),
-    (0, swagger_1.ApiQuery)({ name: 'expiringWithinDays', required: false, type: Number }),
-    __param(0, (0, common_1.Query)('status')),
-    __param(1, (0, common_1.Query)('customerId')),
-    __param(2, (0, common_1.Query)('expiringWithinDays')),
+    (0, swagger_1.ApiOperation)({ summary: 'List fire extinguishers (paginated)' }),
+    __param(0, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:paramtypes", [query_extinguisher_dto_js_1.QueryExtinguisherDto]),
     __metadata("design:returntype", void 0)
 ], ExtinguishersController.prototype, "findAll", null);
 __decorate([
@@ -83,7 +70,8 @@ __decorate([
 ], ExtinguishersController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id'),
-    (0, swagger_1.ApiOperation)({ summary: 'Update extinguisher record' }),
+    (0, roles_decorator_js_1.Roles)(prisma_enums_js_1.Role.ADMIN, prisma_enums_js_1.Role.INSPECTOR),
+    (0, swagger_1.ApiOperation)({ summary: 'Update an extinguisher' }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -91,32 +79,19 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], ExtinguishersController.prototype, "update", null);
 __decorate([
-    (0, common_1.Post)(':id/deliver'),
-    (0, swagger_1.ApiOperation)({ summary: 'Mark extinguisher as delivered to customer' }),
-    __param(0, (0, common_1.Param)('id')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", void 0)
-], ExtinguishersController.prototype, "markDelivered", null);
-__decorate([
-    (0, common_1.Post)(':id/return'),
-    (0, swagger_1.ApiOperation)({ summary: 'Mark extinguisher as returned by customer' }),
-    __param(0, (0, common_1.Param)('id')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", void 0)
-], ExtinguishersController.prototype, "markReturned", null);
-__decorate([
     (0, common_1.Delete)(':id'),
-    (0, swagger_1.ApiOperation)({ summary: 'Delete extinguisher record' }),
+    (0, roles_decorator_js_1.Roles)(prisma_enums_js_1.Role.ADMIN),
+    (0, swagger_1.ApiOperation)({ summary: 'Delete an extinguisher (admin)' }),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], ExtinguishersController.prototype, "remove", null);
 exports.ExtinguishersController = ExtinguishersController = __decorate([
-    (0, swagger_1.ApiTags)('Fire Extinguishers'),
+    (0, swagger_1.ApiTags)('Extinguishers'),
+    (0, swagger_1.ApiBearerAuth)(),
     (0, common_1.Controller)('extinguishers'),
+    (0, common_1.UseGuards)(roles_guard_js_1.RolesGuard),
     __metadata("design:paramtypes", [extinguishers_service_js_1.ExtinguishersService])
 ], ExtinguishersController);
 //# sourceMappingURL=extinguishers.controller.js.map

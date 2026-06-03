@@ -1,1 +1,1 @@
-export { EscalationStatus, ExtinguisherStatus, NotificationChannel, NotificationType, } from '../generated/prisma/client';
+export { ExtinguisherStatus, ExtinguisherType, InspectionStatus, MaintenanceCondition, NotificationChannel, NotificationType, Role, } from '../generated/prisma/client';

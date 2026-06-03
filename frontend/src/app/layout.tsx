@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
-import { AppShell } from "@/components/layout/app-shell";
+import { AuthProvider } from "@/components/providers/auth-provider";
+import { ToastProvider } from "@/components/providers/toast-provider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -9,8 +10,9 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "FEMS — Fire Extinguisher Management",
-  description: "Manage fire extinguisher sales, expiry tracking, and compliance",
+  title: "FEMS — Fire Extinguisher Management System",
+  description:
+    "Register, inspect, and maintain fire extinguishers, track compliance, and manage records.",
 };
 
 export default function RootLayout({
@@ -21,7 +23,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geistSans.variable} h-full`}>
       <body className="min-h-full antialiased">
-        <AppShell>{children}</AppShell>
+        <AuthProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </AuthProvider>
       </body>
     </html>
   );

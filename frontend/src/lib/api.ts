@@ -1,5 +1,8 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/api";
 
+export const TOKEN_KEY = "fems_token";
+export const USER_KEY = "fems_user";
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -10,189 +13,485 @@ export class ApiError extends Error {
   }
 }
 
+/* ------------------------------------------------------------------ */
+/* Token / user storage helpers                                        */
+/* ------------------------------------------------------------------ */
+
+export function getToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return window.localStorage.getItem(TOKEN_KEY);
+}
+
+export function setToken(token: string) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(TOKEN_KEY, token);
+}
+
+export function getStoredUser(): User | null {
+  if (typeof window === "undefined") return null;
+  const raw = window.localStorage.getItem(USER_KEY);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as User;
+  } catch {
+    return null;
+  }
+}
+
+export function setStoredUser(user: User) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(USER_KEY, JSON.stringify(user));
+}
+
+export function clearAuth() {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(TOKEN_KEY);
+  window.localStorage.removeItem(USER_KEY);
+}
+
+/* ------------------------------------------------------------------ */
+/* Core request helper                                                 */
+/* ------------------------------------------------------------------ */
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
+  const method = options?.method ?? "GET";
+  const hasBody = options?.body !== undefined && options?.body !== null;
+
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+    ...(options?.headers as Record<string, string> | undefined),
+  };
+
+  const token = getToken();
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  let body = options?.body;
+  if ((method === "POST" || method === "PATCH" || method === "PUT") && !hasBody) {
+    body = "{}";
+    headers["Content-Type"] = "application/json";
+  } else if (hasBody) {
+    headers["Content-Type"] = "application/json";
+  }
+
   const response = await fetch(`${API_BASE}${path}`, {
     ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options?.headers,
-    },
+    method,
+    body,
+    headers,
     cache: "no-store",
   });
+
+  if (response.status === 401) {
+    clearAuth();
+    if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
+      window.location.href = "/login";
+    }
+    throw new ApiError("Your session has expired. Please sign in again.", 401);
+  }
+
+  const text = await response.text();
 
   if (!response.ok) {
     let message = `Request failed (${response.status})`;
     try {
-      const body = await response.json();
-      message = body.message ?? body.error ?? message;
-      if (Array.isArray(message)) message = message.join(", ");
+      if (text) {
+        const parsed = JSON.parse(text) as {
+          message?: string | string[];
+          error?: string;
+        };
+        const raw = parsed.message ?? parsed.error ?? message;
+        message = Array.isArray(raw) ? raw.join(", ") : String(raw);
+      }
     } catch {
-      // ignore parse errors
+      if (text) message = text.slice(0, 200);
     }
     throw new ApiError(message, response.status);
   }
 
-  if (response.status === 204) return undefined as T;
-  return response.json() as Promise<T>;
+  if (response.status === 204 || !text.trim()) {
+    return undefined as T;
+  }
+
+  return JSON.parse(text) as T;
 }
 
-export const api = {
-  dashboard: {
-    summary: () => request<DashboardSummary>("/dashboard/summary"),
-  },
-  customers: {
-    list: (search?: string) =>
-      request<Customer[]>(`/customers${search ? `?search=${encodeURIComponent(search)}` : ""}`),
-    get: (id: string) => request<CustomerDetail>(`/customers/${id}`),
-    create: (data: CreateCustomerInput) =>
-      request<Customer>("/customers", { method: "POST", body: JSON.stringify(data) }),
-    update: (id: string, data: Partial<CreateCustomerInput>) =>
-      request<Customer>(`/customers/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
-    delete: (id: string) => request<void>(`/customers/${id}`, { method: "DELETE" }),
-  },
-  extinguishers: {
-    list: (params?: { status?: string; customerId?: string; expiringWithinDays?: number }) => {
-      const query = new URLSearchParams();
-      if (params?.status) query.set("status", params.status);
-      if (params?.customerId) query.set("customerId", params.customerId);
-      if (params?.expiringWithinDays)
-        query.set("expiringWithinDays", String(params.expiringWithinDays));
-      const qs = query.toString();
-      return request<Extinguisher[]>(`/extinguishers${qs ? `?${qs}` : ""}`);
-    },
-    get: (id: string) => request<ExtinguisherDetail>(`/extinguishers/${id}`),
-    create: (data: CreateExtinguisherInput) =>
-      request<Extinguisher>("/extinguishers", { method: "POST", body: JSON.stringify(data) }),
-    update: (id: string, data: Partial<CreateExtinguisherInput>) =>
-      request<Extinguisher>(`/extinguishers/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
-    deliver: (id: string) =>
-      request<Extinguisher>(`/extinguishers/${id}/deliver`, { method: "POST" }),
-    return: (id: string) =>
-      request<Extinguisher>(`/extinguishers/${id}/return`, { method: "POST" }),
-    delete: (id: string) => request<void>(`/extinguishers/${id}`, { method: "DELETE" }),
-  },
-  notifications: {
-    list: (customerId?: string) =>
-      request<Notification[]>(
-        `/notifications${customerId ? `?customerId=${customerId}` : ""}`,
-      ),
-  },
-  escalations: {
-    list: (status?: string) =>
-      request<Escalation[]>(`/escalations${status ? `?status=${status}` : ""}`),
-    reportToPolice: (id: string, notes?: string) =>
-      request<Escalation>(`/escalations/${id}/report-to-police`, {
-        method: "POST",
-        body: JSON.stringify({ notes }),
-      }),
-    update: (id: string, data: { status?: string; notes?: string }) =>
-      request<Escalation>(`/escalations/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify(data),
-      }),
-  },
-  compliance: {
-    runChecks: () =>
-      request<{ warnings: { processed: number }; escalations: { processed: number } }>(
-        "/compliance/run-checks",
-        { method: "POST" },
-      ),
-  },
-};
+function buildQuery(params?: Record<string, string | number | boolean | undefined>): string {
+  if (!params) return "";
+  const query = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== "" && value !== null) {
+      query.set(key, String(value));
+    }
+  }
+  const qs = query.toString();
+  return qs ? `?${qs}` : "";
+}
 
-export type ExtinguisherStatus = "ACTIVE" | "DELIVERED" | "RETURNED" | "EXPIRED";
-export type EscalationStatus = "PENDING" | "REPORTED" | "RESOLVED";
-export type NotificationType = "EXPIRY_WARNING" | "POLICE_ESCALATION";
+/* ------------------------------------------------------------------ */
+/* File download helper (report exports)                               */
+/* ------------------------------------------------------------------ */
 
-export interface Customer {
+export async function downloadFile(path: string, fallbackName = "report"): Promise<void> {
+  const token = getToken();
+  const response = await fetch(`${API_BASE}${path}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    cache: "no-store",
+  });
+
+  if (response.status === 401) {
+    clearAuth();
+    if (typeof window !== "undefined") window.location.href = "/login";
+    throw new ApiError("Your session has expired. Please sign in again.", 401);
+  }
+
+  if (!response.ok) {
+    let message = `Download failed (${response.status})`;
+    try {
+      const parsed = (await response.json()) as { message?: string | string[]; error?: string };
+      const raw = parsed.message ?? parsed.error ?? message;
+      message = Array.isArray(raw) ? raw.join(", ") : String(raw);
+    } catch {
+      /* keep default message */
+    }
+    throw new ApiError(message, response.status);
+  }
+
+  const disposition = response.headers.get("Content-Disposition") ?? "";
+  const match = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(disposition);
+  const filename = match ? decodeURIComponent(match[1]) : fallbackName;
+
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url);
+}
+
+/* ------------------------------------------------------------------ */
+/* Types & enums                                                       */
+/* ------------------------------------------------------------------ */
+
+export type Role = "ADMIN" | "INSPECTOR" | "USER";
+
+export const ROLES: Role[] = ["ADMIN", "INSPECTOR", "USER"];
+
+export interface User {
   id: string;
-  fullName: string;
-  nationalId: string;
-  email: string | null;
-  phone: string;
-  address: string | null;
-  createdAt: string;
-  updatedAt: string;
-  _count?: { extinguishers: number };
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: Role;
+  isActive?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-export interface CustomerDetail extends Omit<Customer, "_count"> {
-  extinguishers: Extinguisher[];
-  _count?: { notifications: number; escalations: number };
-}
+export type ExtinguisherType = "WATER" | "CO2" | "FOAM" | "DRY_CHEMICAL";
+export const EXTINGUISHER_TYPES: ExtinguisherType[] = ["WATER", "CO2", "FOAM", "DRY_CHEMICAL"];
 
-export interface CreateCustomerInput {
-  fullName: string;
-  nationalId: string;
-  email?: string;
-  phone: string;
-  address?: string;
-}
+export type ExtinguisherSize = "2.5lbs" | "5lbs" | "9lbs" | "12lbs";
+export const EXTINGUISHER_SIZES: ExtinguisherSize[] = ["2.5lbs", "5lbs", "9lbs", "12lbs"];
 
-export interface Extinguisher {
+export type ExtinguisherStatus =
+  | "ACTIVE"
+  | "EXPIRED"
+  | "NEEDS_MAINTENANCE"
+  | "OUT_OF_SERVICE";
+export const EXTINGUISHER_STATUSES: ExtinguisherStatus[] = [
+  "ACTIVE",
+  "EXPIRED",
+  "NEEDS_MAINTENANCE",
+  "OUT_OF_SERVICE",
+];
+
+export interface FireExtinguisher {
   id: string;
   serialNumber: string;
-  type: string | null;
-  capacity: string | null;
-  purchaseDate: string;
+  location: string;
+  type: ExtinguisherType;
+  size: string;
+  installationDate: string;
   expiryDate: string;
   status: ExtinguisherStatus;
-  customerId: string;
-  customer?: Pick<Customer, "id" | "fullName" | "nationalId" | "phone">;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface ExtinguisherDetail extends Extinguisher {
-  customer: Customer;
-  notifications: Notification[];
-  escalations: Escalation[];
+export interface FireExtinguisherDetail extends FireExtinguisher {
+  inspections?: Inspection[];
+  maintenanceLogs?: MaintenanceLog[];
 }
 
-export interface CreateExtinguisherInput {
-  serialNumber: string;
-  customerId: string;
-  purchaseDate: string;
-  expiryDate: string;
-  type?: string;
-  capacity?: string;
-  status?: ExtinguisherStatus;
+export type InspectionStatus =
+  | "SCHEDULED"
+  | "IN_PROGRESS"
+  | "COMPLETED"
+  | "CANCELLED"
+  | "OVERDUE";
+export const INSPECTION_STATUSES: InspectionStatus[] = [
+  "SCHEDULED",
+  "IN_PROGRESS",
+  "COMPLETED",
+  "CANCELLED",
+  "OVERDUE",
+];
+
+export type InspectionResult = "PASS" | "FAIL" | "PASS_WITH_NOTES";
+export const INSPECTION_RESULTS: InspectionResult[] = ["PASS", "FAIL", "PASS_WITH_NOTES"];
+
+export interface Inspection {
+  id: string;
+  extinguisherId: string;
+  scheduledAt: string;
+  completedAt: string | null;
+  status: InspectionStatus;
+  result: InspectionResult | null;
+  notes: string | null;
+  inspectorId: string | null;
+  scheduledBy?: Pick<User, "id" | "firstName" | "lastName" | "email"> | null;
+  inspector?: Pick<User, "id" | "firstName" | "lastName" | "email"> | null;
+  extinguisher?: Pick<FireExtinguisher, "id" | "serialNumber" | "location" | "type"> | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type MaintenanceCondition =
+  | "GOOD"
+  | "FAIR"
+  | "POOR"
+  | "DAMAGED"
+  | "NEEDS_REPLACEMENT";
+export const MAINTENANCE_CONDITIONS: MaintenanceCondition[] = [
+  "GOOD",
+  "FAIR",
+  "POOR",
+  "DAMAGED",
+  "NEEDS_REPLACEMENT",
+];
+
+export interface MaintenanceLog {
+  id: string;
+  extinguisherId: string;
+  actionsTaken: string;
+  actionDate: string;
+  conditionNoted: MaintenanceCondition;
+  inspectionId: string | null;
+  extinguisher?: Pick<FireExtinguisher, "id" | "serialNumber" | "location"> | null;
+  createdAt: string;
+  updatedAt?: string;
 }
 
 export interface Notification {
   id: string;
-  type: NotificationType;
-  channel: string;
   message: string;
-  sentAt: string;
-  customerId: string;
-  extinguisherId: string;
-  customer?: Pick<Customer, "fullName" | "phone" | "email">;
-  extinguisher?: Pick<Extinguisher, "serialNumber" | "expiryDate">;
-}
-
-export interface Escalation {
-  id: string;
-  reason: string;
-  status: EscalationStatus;
-  reportedAt: string | null;
-  resolvedAt: string | null;
-  notes: string | null;
-  customerId: string;
-  extinguisherId: string;
+  isRead: boolean;
+  type?: string;
+  extinguisherId?: string | null;
   createdAt: string;
-  updatedAt: string;
-  customer?: Pick<Customer, "fullName" | "nationalId" | "phone">;
-  extinguisher?: Pick<Extinguisher, "serialNumber" | "expiryDate">;
 }
 
-export interface DashboardSummary {
-  totalCustomers: number;
-  totalExtinguishers: number;
-  activeExtinguishers: number;
-  deliveredExtinguishers: number;
-  expiringSoon: number;
-  expiredNotReturned: number;
-  pendingEscalations: number;
-  recentNotifications: Notification[];
+export interface PageMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
 }
+
+export interface Page<T> {
+  data: T[];
+  meta: PageMeta;
+}
+
+export interface ReportSummary {
+  totalExtinguishers: number;
+  byStatus: Record<string, number>;
+  byType: Record<string, number>;
+  registeredToday: number;
+  registeredThisMonth: number;
+  registeredThisYear: number;
+  activeInspections: number;
+  expiredCount: number;
+}
+
+export interface StockReportPoint {
+  period: string;
+  count: number;
+}
+
+export interface InspectionStatusReport {
+  byStatus: Record<string, number>;
+  total?: number;
+}
+
+/* ------------------------------------------------------------------ */
+/* Input payload types                                                 */
+/* ------------------------------------------------------------------ */
+
+export interface RegisterInput {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+}
+
+export interface LoginInput {
+  email: string;
+  password: string;
+}
+
+export interface AuthResponse {
+  accessToken: string;
+  user: User;
+}
+
+export interface CreateExtinguisherInput {
+  serialNumber: string;
+  location: string;
+  type: ExtinguisherType;
+  size: string;
+  installationDate: string;
+  expiryDate: string;
+  status?: ExtinguisherStatus;
+}
+
+export interface CreateInspectionInput {
+  extinguisherId: string;
+  scheduledAt: string;
+  inspectorId?: string;
+  notes?: string;
+}
+
+export interface UpdateInspectionInput {
+  status?: InspectionStatus;
+  result?: InspectionResult;
+  notes?: string;
+  inspectorId?: string;
+}
+
+export interface CreateMaintenanceInput {
+  extinguisherId: string;
+  actionsTaken: string;
+  actionDate: string;
+  conditionNoted: MaintenanceCondition;
+  inspectionId?: string;
+}
+
+/* ------------------------------------------------------------------ */
+/* API surface                                                         */
+/* ------------------------------------------------------------------ */
+
+export const api = {
+  auth: {
+    register: (data: RegisterInput) =>
+      request<AuthResponse>("/auth/register", { method: "POST", body: JSON.stringify(data) }),
+    login: (data: LoginInput) =>
+      request<AuthResponse>("/auth/login", { method: "POST", body: JSON.stringify(data) }),
+    logout: () => request<void>("/auth/logout", { method: "POST" }),
+    forgotPassword: (email: string) =>
+      request<{ message?: string }>("/auth/forgot-password", {
+        method: "POST",
+        body: JSON.stringify({ email }),
+      }),
+    resetPassword: (token: string, newPassword: string) =>
+      request<{ message?: string }>("/auth/reset-password", {
+        method: "POST",
+        body: JSON.stringify({ token, newPassword }),
+      }),
+  },
+
+  users: {
+    me: () => request<User>("/users/me"),
+    updateMe: (data: { firstName?: string; lastName?: string; email?: string }) =>
+      request<User>("/users/me", { method: "PATCH", body: JSON.stringify(data) }),
+    changePassword: (data: { currentPassword: string; newPassword: string }) =>
+      request<{ message?: string }>("/users/me/password", {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      }),
+    list: (params?: { page?: number; limit?: number; role?: Role | ""; search?: string }) =>
+      request<Page<User>>(`/users${buildQuery(params)}`),
+    setRole: (id: string, role: Role) =>
+      request<User>(`/users/${id}/role`, { method: "PATCH", body: JSON.stringify({ role }) }),
+    setStatus: (id: string, isActive: boolean) =>
+      request<User>(`/users/${id}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ isActive }),
+      }),
+    delete: (id: string) => request<void>(`/users/${id}`, { method: "DELETE" }),
+  },
+
+  extinguishers: {
+    create: (data: CreateExtinguisherInput) =>
+      request<FireExtinguisher>("/extinguishers", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    list: (params?: {
+      page?: number;
+      limit?: number;
+      status?: ExtinguisherStatus | "";
+      type?: ExtinguisherType | "";
+      search?: string;
+    }) => request<Page<FireExtinguisher>>(`/extinguishers${buildQuery(params)}`),
+    get: (id: string) => request<FireExtinguisherDetail>(`/extinguishers/${id}`),
+    update: (id: string, data: Partial<CreateExtinguisherInput>) =>
+      request<FireExtinguisher>(`/extinguishers/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      }),
+    delete: (id: string) => request<void>(`/extinguishers/${id}`, { method: "DELETE" }),
+  },
+
+  inspections: {
+    create: (data: CreateInspectionInput) =>
+      request<Inspection>("/inspections", { method: "POST", body: JSON.stringify(data) }),
+    list: (params?: {
+      page?: number;
+      limit?: number;
+      status?: InspectionStatus | "";
+      extinguisherId?: string;
+      inspectorId?: string;
+    }) => request<Page<Inspection>>(`/inspections${buildQuery(params)}`),
+    get: (id: string) => request<Inspection>(`/inspections/${id}`),
+    update: (id: string, data: UpdateInspectionInput) =>
+      request<Inspection>(`/inspections/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      }),
+    delete: (id: string) => request<void>(`/inspections/${id}`, { method: "DELETE" }),
+  },
+
+  maintenance: {
+    create: (data: CreateMaintenanceInput) =>
+      request<MaintenanceLog>("/maintenance", { method: "POST", body: JSON.stringify(data) }),
+    list: (params?: { page?: number; limit?: number; extinguisherId?: string }) =>
+      request<Page<MaintenanceLog>>(`/maintenance${buildQuery(params)}`),
+    get: (id: string) => request<MaintenanceLog>(`/maintenance/${id}`),
+  },
+
+  reports: {
+    summary: () => request<ReportSummary>("/reports/summary"),
+    stock: (period: "daily" | "monthly" | "yearly" = "monthly") =>
+      request<StockReportPoint[]>(`/reports/stock${buildQuery({ period })}`),
+    inspectionStatus: () => request<InspectionStatusReport>("/reports/inspection-status"),
+    expired: (params?: { page?: number; limit?: number }) =>
+      request<Page<FireExtinguisher>>(`/reports/expired${buildQuery(params)}`),
+    maintenanceHistory: (params?: {
+      extinguisherId?: string;
+      page?: number;
+      limit?: number;
+    }) => request<Page<MaintenanceLog>>(`/reports/maintenance-history${buildQuery(params)}`),
+  },
+
+  notifications: {
+    list: (params?: { page?: number; limit?: number; isRead?: boolean }) =>
+      request<Page<Notification>>(`/notifications${buildQuery(params)}`),
+    markRead: (id: string) =>
+      request<Notification>(`/notifications/${id}/read`, { method: "PATCH" }),
+    markAllRead: () => request<void>("/notifications/read-all", { method: "PATCH" }),
+  },
+};

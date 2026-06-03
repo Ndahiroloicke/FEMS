@@ -7,45 +7,35 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
-import {
-  ApiOperation,
-  ApiQuery,
-  ApiTags,
-} from '@nestjs/swagger';
-import { ExtinguisherStatus } from '../generated/prisma/client';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Roles } from '../common/decorators/roles.decorator.js';
+import { RolesGuard } from '../common/guards/roles.guard.js';
+import { Role } from '../common/prisma-enums.js';
 import { CreateExtinguisherDto } from './dto/create-extinguisher.dto.js';
+import { QueryExtinguisherDto } from './dto/query-extinguisher.dto.js';
 import { UpdateExtinguisherDto } from './dto/update-extinguisher.dto.js';
 import { ExtinguishersService } from './extinguishers.service.js';
 
-@ApiTags('Fire Extinguishers')
+@ApiTags('Extinguishers')
+@ApiBearerAuth()
 @Controller('extinguishers')
+@UseGuards(RolesGuard)
 export class ExtinguishersController {
   constructor(private readonly extinguishersService: ExtinguishersService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Register a new fire extinguisher sale' })
+  @Roles(Role.ADMIN, Role.INSPECTOR)
+  @ApiOperation({ summary: 'Register a new fire extinguisher' })
   create(@Body() dto: CreateExtinguisherDto) {
     return this.extinguishersService.create(dto);
   }
 
   @Get()
-  @ApiOperation({ summary: 'List fire extinguishers' })
-  @ApiQuery({ name: 'status', required: false, enum: ExtinguisherStatus })
-  @ApiQuery({ name: 'customerId', required: false })
-  @ApiQuery({ name: 'expiringWithinDays', required: false, type: Number })
-  findAll(
-    @Query('status') status?: ExtinguisherStatus,
-    @Query('customerId') customerId?: string,
-    @Query('expiringWithinDays') expiringWithinDays?: string,
-  ) {
-    return this.extinguishersService.findAll({
-      status,
-      customerId,
-      expiringWithinDays: expiringWithinDays
-        ? Number(expiringWithinDays)
-        : undefined,
-    });
+  @ApiOperation({ summary: 'List fire extinguishers (paginated)' })
+  findAll(@Query() query: QueryExtinguisherDto) {
+    return this.extinguishersService.findAll(query);
   }
 
   @Get(':id')
@@ -55,25 +45,15 @@ export class ExtinguishersController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Update extinguisher record' })
+  @Roles(Role.ADMIN, Role.INSPECTOR)
+  @ApiOperation({ summary: 'Update an extinguisher' })
   update(@Param('id') id: string, @Body() dto: UpdateExtinguisherDto) {
     return this.extinguishersService.update(id, dto);
   }
 
-  @Post(':id/deliver')
-  @ApiOperation({ summary: 'Mark extinguisher as delivered to customer' })
-  markDelivered(@Param('id') id: string) {
-    return this.extinguishersService.markDelivered(id);
-  }
-
-  @Post(':id/return')
-  @ApiOperation({ summary: 'Mark extinguisher as returned by customer' })
-  markReturned(@Param('id') id: string) {
-    return this.extinguishersService.markReturned(id);
-  }
-
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete extinguisher record' })
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Delete an extinguisher (admin)' })
   remove(@Param('id') id: string) {
     return this.extinguishersService.remove(id);
   }
