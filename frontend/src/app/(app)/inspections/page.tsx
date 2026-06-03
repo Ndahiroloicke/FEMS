@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/modal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Pagination } from "@/components/ui/pagination";
+import { NOTIFICATIONS_UPDATED_EVENT } from "@/components/layout/sidebar";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useToast } from "@/components/providers/toast-provider";
 import {
@@ -158,6 +159,7 @@ export default function InspectionsPage() {
       };
       await api.inspections.create(payload);
       toast.success(isUser ? "Inspection request submitted" : "Inspection scheduled");
+      window.dispatchEvent(new Event(NOTIFICATIONS_UPDATED_EVENT));
       setScheduleOpen(false);
       setPage(1);
       await load();
@@ -190,6 +192,7 @@ export default function InspectionsPage() {
         inspectorId: editForm.inspectorId || undefined,
       });
       toast.success("Inspection updated");
+      window.dispatchEvent(new Event(NOTIFICATIONS_UPDATED_EVENT));
       setEditing(null);
       await load();
     } catch (err) {

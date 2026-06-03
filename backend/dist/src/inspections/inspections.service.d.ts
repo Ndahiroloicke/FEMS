@@ -12,6 +12,7 @@ export declare class InspectionsService {
     private readonly notifications;
     private readonly mailer;
     constructor(prisma: PrismaService, notifications: NotificationsService, mailer: MailerService);
+    private notifyInspectorAssigned;
     create(dto: CreateInspectionDto, currentUser: AuthUser): Promise<{
         extinguisher: {
             id: string;

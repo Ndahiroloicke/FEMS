@@ -34,6 +34,21 @@ export class InspectionsService {
     private readonly mailer: MailerService,
   ) {}
 
+  private async notifyInspectorAssigned(
+    inspectorId: string,
+    extinguisher: { id: string; serialNumber: string; location: string },
+    scheduledAt: Date,
+  ) {
+    await this.notifications.createNotification({
+      userId: inspectorId,
+      type: NotificationType.INSPECTION_SCHEDULED,
+      message: `You have been assigned an inspection for extinguisher ${extinguisher.serialNumber} (${extinguisher.location}) on ${scheduledAt.toISOString()}.`,
+      extinguisherId: extinguisher.id,
+      emailSubject: 'FEMS — New inspection assigned',
+      sendEmail: this.mailer.isConfigured,
+    });
+  }
+
   async create(dto: CreateInspectionDto, currentUser: AuthUser) {
     const extinguisher = await this.prisma.fireExtinguisher.findUnique({
       where: { id: dto.extinguisherId },
@@ -97,14 +112,11 @@ export class InspectionsService {
     const message = `Inspection scheduled for extinguisher ${extinguisher.serialNumber} (${extinguisher.location}) on ${inspection.scheduledAt.toISOString()}.`;
 
     if (dto.inspectorId) {
-      await this.notifications.createNotification({
-        userId: dto.inspectorId,
-        type: NotificationType.INSPECTION_SCHEDULED,
-        message,
-        extinguisherId: extinguisher.id,
-        emailSubject: 'FEMS — New inspection assigned',
-        sendEmail,
-      });
+      await this.notifyInspectorAssigned(
+        dto.inspectorId,
+        extinguisher,
+        inspection.scheduledAt,
+      );
     }
 
     await this.notifications.notifyAdmins({
@@ -167,7 +179,9 @@ export class InspectionsService {
     const current = await this.prisma.inspection.findUnique({
       where: { id },
       include: {
-        extinguisher: { select: { serialNumber: true, location: true } },
+        extinguisher: {
+          select: { id: true, serialNumber: true, location: true },
+        },
       },
     });
     if (!current) {
@@ -179,11 +193,13 @@ export class InspectionsService {
       );
     }
 
+    const assignedInspectorId = dto.inspectorId ?? current.inspectorId ?? null;
+
     const updated = await this.prisma.inspection.update({
       where: { id },
       data: {
         status: InspectionStatus.SCHEDULED,
-        inspectorId: dto.inspectorId ?? current.inspectorId,
+        inspectorId: assignedInspectorId,
         notes: dto.notes ?? current.notes,
       },
       include: inspectionInclude,
@@ -200,11 +216,29 @@ export class InspectionsService {
       });
     }
 
+    if (
+      assignedInspectorId &&
+      assignedInspectorId !== current.inspectorId
+    ) {
+      await this.notifyInspectorAssigned(
+        assignedInspectorId,
+        current.extinguisher,
+        updated.scheduledAt,
+      );
+    }
+
     return updated;
   }
 
   async update(id: string, dto: UpdateInspectionDto) {
-    const current = await this.prisma.inspection.findUnique({ where: { id } });
+    const current = await this.prisma.inspection.findUnique({
+      where: { id },
+      include: {
+        extinguisher: {
+          select: { id: true, serialNumber: true, location: true },
+        },
+      },
+    });
     if (!current) {
       throw new NotFoundException(`Inspection ${id} not found`);
     }
@@ -223,7 +257,7 @@ export class InspectionsService {
         ? (current.completedAt ?? new Date())
         : undefined;
 
-    return this.prisma.inspection.update({
+    const updated = await this.prisma.inspection.update({
       where: { id },
       data: {
         status: dto.status,
@@ -234,6 +268,19 @@ export class InspectionsService {
       },
       include: inspectionInclude,
     });
+
+    const newInspectorId =
+      dto.inspectorId !== undefined ? dto.inspectorId : current.inspectorId;
+
+    if (newInspectorId && newInspectorId !== current.inspectorId) {
+      await this.notifyInspectorAssigned(
+        newInspectorId,
+        current.extinguisher,
+        updated.scheduledAt,
+      );
+    }
+
+    return updated;
   }
 
   async remove(id: string) {

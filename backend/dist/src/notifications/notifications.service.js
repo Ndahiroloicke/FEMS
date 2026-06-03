@@ -65,6 +65,7 @@ let NotificationsService = class NotificationsService {
         const { skip, take, page: p, limit: l } = (0, pagination_dto_js_1.getSkipTake)(page, limit);
         const where = {
             userId,
+            channel: prisma_enums_js_1.NotificationChannel.SYSTEM,
             ...(isRead === undefined ? {} : { isRead }),
         };
         const [data, total] = await Promise.all([

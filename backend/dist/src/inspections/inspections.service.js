@@ -29,6 +29,16 @@ let InspectionsService = class InspectionsService {
         this.notifications = notifications;
         this.mailer = mailer;
     }
+    async notifyInspectorAssigned(inspectorId, extinguisher, scheduledAt) {
+        await this.notifications.createNotification({
+            userId: inspectorId,
+            type: prisma_enums_js_1.NotificationType.INSPECTION_SCHEDULED,
+            message: `You have been assigned an inspection for extinguisher ${extinguisher.serialNumber} (${extinguisher.location}) on ${scheduledAt.toISOString()}.`,
+            extinguisherId: extinguisher.id,
+            emailSubject: 'FEMS — New inspection assigned',
+            sendEmail: this.mailer.isConfigured,
+        });
+    }
     async create(dto, currentUser) {
         const extinguisher = await this.prisma.fireExtinguisher.findUnique({
             where: { id: dto.extinguisherId },
@@ -75,14 +85,7 @@ let InspectionsService = class InspectionsService {
         }
         const message = `Inspection scheduled for extinguisher ${extinguisher.serialNumber} (${extinguisher.location}) on ${inspection.scheduledAt.toISOString()}.`;
         if (dto.inspectorId) {
-            await this.notifications.createNotification({
-                userId: dto.inspectorId,
-                type: prisma_enums_js_1.NotificationType.INSPECTION_SCHEDULED,
-                message,
-                extinguisherId: extinguisher.id,
-                emailSubject: 'FEMS — New inspection assigned',
-                sendEmail,
-            });
+            await this.notifyInspectorAssigned(dto.inspectorId, extinguisher, inspection.scheduledAt);
         }
         await this.notifications.notifyAdmins({
             type: prisma_enums_js_1.NotificationType.INSPECTION_SCHEDULED,
@@ -131,7 +134,9 @@ let InspectionsService = class InspectionsService {
         const current = await this.prisma.inspection.findUnique({
             where: { id },
             include: {
-                extinguisher: { select: { serialNumber: true, location: true } },
+                extinguisher: {
+                    select: { id: true, serialNumber: true, location: true },
+                },
             },
         });
         if (!current) {
@@ -140,11 +145,12 @@ let InspectionsService = class InspectionsService {
         if (current.status !== prisma_enums_js_1.InspectionStatus.PENDING) {
             throw new common_1.BadRequestException('Only PENDING inspection requests can be approved');
         }
+        const assignedInspectorId = dto.inspectorId ?? current.inspectorId ?? null;
         const updated = await this.prisma.inspection.update({
             where: { id },
             data: {
                 status: prisma_enums_js_1.InspectionStatus.SCHEDULED,
-                inspectorId: dto.inspectorId ?? current.inspectorId,
+                inspectorId: assignedInspectorId,
                 notes: dto.notes ?? current.notes,
             },
             include: inspectionInclude,
@@ -159,10 +165,21 @@ let InspectionsService = class InspectionsService {
                 sendEmail: this.mailer.isConfigured,
             });
         }
+        if (assignedInspectorId &&
+            assignedInspectorId !== current.inspectorId) {
+            await this.notifyInspectorAssigned(assignedInspectorId, current.extinguisher, updated.scheduledAt);
+        }
         return updated;
     }
     async update(id, dto) {
-        const current = await this.prisma.inspection.findUnique({ where: { id } });
+        const current = await this.prisma.inspection.findUnique({
+            where: { id },
+            include: {
+                extinguisher: {
+                    select: { id: true, serialNumber: true, location: true },
+                },
+            },
+        });
         if (!current) {
             throw new common_1.NotFoundException(`Inspection ${id} not found`);
         }
@@ -177,7 +194,7 @@ let InspectionsService = class InspectionsService {
         const completedAt = dto.status === prisma_enums_js_1.InspectionStatus.COMPLETED
             ? (current.completedAt ?? new Date())
             : undefined;
-        return this.prisma.inspection.update({
+        const updated = await this.prisma.inspection.update({
             where: { id },
             data: {
                 status: dto.status,
@@ -188,6 +205,11 @@ let InspectionsService = class InspectionsService {
             },
             include: inspectionInclude,
         });
+        const newInspectorId = dto.inspectorId !== undefined ? dto.inspectorId : current.inspectorId;
+        if (newInspectorId && newInspectorId !== current.inspectorId) {
+            await this.notifyInspectorAssigned(newInspectorId, current.extinguisher, updated.scheduledAt);
+        }
+        return updated;
     }
     async remove(id) {
         const current = await this.prisma.inspection.findUnique({ where: { id } });

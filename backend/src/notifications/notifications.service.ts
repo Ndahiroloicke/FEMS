@@ -94,6 +94,7 @@ export class NotificationsService {
     const { skip, take, page: p, limit: l } = getSkipTake(page, limit);
     const where = {
       userId,
+      channel: NotificationChannel.SYSTEM,
       ...(isRead === undefined ? {} : { isRead }),
     };
 
