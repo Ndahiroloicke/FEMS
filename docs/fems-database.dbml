@@ -1,86 +1,138 @@
-// Fire Extinguisher Management System (FEMS) — Database Model
+// Fire Extinguisher Management System (FEMS) — Database Schema (v2)
 // DBML — paste into https://dbdiagram.io
-// DBMS: PostgreSQL. RESTful monolithic API (NestJS + Prisma).
+// DBMS: PostgreSQL 16. RESTful monolithic API (NestJS 11 + Prisma 7).
+// Updated: ownerId on fire_extinguishers, PENDING/APPROVED inspection statuses.
 
-Enum role { ADMIN INSPECTOR USER }
-Enum extinguisher_type { WATER CO2 FOAM DRY_CHEMICAL }
-Enum extinguisher_status { ACTIVE EXPIRED NEEDS_MAINTENANCE OUT_OF_SERVICE }
-Enum inspection_status { SCHEDULED IN_PROGRESS COMPLETED CANCELLED OVERDUE }
-Enum maintenance_condition { GOOD FAIR POOR DAMAGED NEEDS_REPLACEMENT }
-Enum notification_type { INSPECTION_SCHEDULED INSPECTION_REMINDER EXPIRY_WARNING MAINTENANCE_LOGGED ACCOUNT }
-Enum notification_channel { EMAIL SYSTEM }
+Enum role {
+  ADMIN
+  INSPECTOR
+  USER
+}
+
+Enum extinguisher_type {
+  WATER
+  CO2
+  FOAM
+  DRY_CHEMICAL
+}
+
+Enum extinguisher_status {
+  ACTIVE
+  EXPIRED
+  NEEDS_MAINTENANCE
+  OUT_OF_SERVICE
+}
+
+Enum inspection_status {
+  PENDING     // USER submitted request — awaiting ADMIN/INSPECTOR approval
+  APPROVED    // Intermediate approval state
+  SCHEDULED   // Confirmed with date/inspector
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  OVERDUE
+}
+
+Enum maintenance_condition {
+  GOOD
+  FAIR
+  POOR
+  DAMAGED
+  NEEDS_REPLACEMENT
+}
+
+Enum notification_type {
+  INSPECTION_SCHEDULED
+  INSPECTION_REMINDER
+  EXPIRY_WARNING
+  MAINTENANCE_LOGGED
+  ACCOUNT
+}
+
+Enum notification_channel {
+  EMAIL
+  SYSTEM
+}
 
 Table users {
-  id varchar [primary key, note: 'UUID']
-  first_name varchar [not null]
-  last_name varchar [not null]
-  email varchar [unique, not null]
-  password_hash varchar [not null, note: 'bcrypt hash']
-  role role [not null, default: 'USER']
-  is_active boolean [not null, default: true]
-  reset_token varchar [note: 'password recovery token']
-  reset_token_expires_at timestamp
-  created_at timestamp [default: `now()`]
-  updated_at timestamp [not null]
+  id            varchar      [primary key, note: 'UUID v4']
+  first_name    varchar(100) [not null]
+  last_name     varchar(100) [not null]
+  email         varchar(255) [unique, not null]
+  password_hash varchar      [not null, note: 'bcrypt (10 rounds)']
+  role          role         [not null, default: 'USER']
+  is_active     boolean      [not null, default: true]
+  reset_token   varchar      [null, note: 'password recovery token']
+  reset_token_expires_at timestamp [null]
+  created_at    timestamp    [default: `now()`]
+  updated_at    timestamp    [not null]
 }
 
 Table fire_extinguishers {
-  id varchar [primary key, note: 'UUID']
-  serial_number varchar [unique, not null]
-  location varchar [not null]
-  type extinguisher_type [not null]
-  size varchar [not null, note: 'e.g. 6kg']
-  installation_date timestamp [not null]
-  expiry_date timestamp [not null]
-  status extinguisher_status [not null, default: 'ACTIVE']
-  created_at timestamp [default: `now()`]
-  updated_at timestamp [not null]
+  id               varchar             [primary key, note: 'UUID v4']
+  serial_number    varchar             [unique, not null]
+  location         varchar             [not null, note: 'min 3 chars']
+  type             extinguisher_type   [not null]
+  size             varchar             [not null, note: '2.5lbs | 5lbs | 9lbs | 12lbs']
+  installation_date timestamp          [not null]
+  expiry_date      timestamp           [not null, note: 'must be after installation_date']
+  status           extinguisher_status [not null, default: 'ACTIVE']
+  owner_id         varchar             [null, note: 'assigned USER — set via PATCH /extinguishers/:id/assign']
+  created_at       timestamp           [default: `now()`]
+  updated_at       timestamp           [not null]
 }
 
 Table inspections {
-  id varchar [primary key, note: 'UUID']
-  extinguisher_id varchar [not null]
-  scheduled_by_id varchar [not null, note: 'user who scheduled it']
-  inspector_id varchar [note: 'assigned inspector (nullable)']
-  scheduled_at timestamp [not null]
-  status inspection_status [not null, default: 'SCHEDULED']
-  result text
-  notes text
-  completed_at timestamp
-  created_at timestamp [default: `now()`]
-  updated_at timestamp [not null]
+  id               varchar          [primary key, note: 'UUID v4']
+  extinguisher_id  varchar          [not null]
+  scheduled_by_id  varchar          [not null, note: 'user who created the request']
+  inspector_id     varchar          [null, note: 'assigned inspector']
+  scheduled_at     timestamp        [not null]
+  status           inspection_status [not null, default: 'SCHEDULED', note: 'USER creates PENDING; ADMIN/INSPECTOR creates SCHEDULED']
+  result           text             [null]
+  notes            text             [null, note: 'reason / observations — min 5 chars if provided']
+  completed_at     timestamp        [null]
+  created_at       timestamp        [default: `now()`]
+  updated_at       timestamp        [not null]
 }
 
 Table maintenance_logs {
-  id varchar [primary key, note: 'UUID']
-  extinguisher_id varchar [not null]
-  inspector_id varchar [not null]
-  inspection_id varchar [note: 'optional link to inspection']
-  actions_taken text [not null]
-  condition_noted maintenance_condition [not null]
-  action_date timestamp [not null]
-  created_at timestamp [default: `now()`]
+  id               varchar               [primary key, note: 'UUID v4']
+  extinguisher_id  varchar               [not null]
+  inspector_id     varchar               [not null]
+  inspection_id    varchar               [null, note: 'optional link to parent inspection']
+  actions_taken    text                  [not null, note: 'min 10 chars']
+  condition_noted  maintenance_condition [not null]
+  action_date      timestamp             [not null]
+  created_at       timestamp             [default: `now()`]
 }
 
 Table notifications {
-  id varchar [primary key, note: 'UUID']
-  user_id varchar [not null]
-  extinguisher_id varchar [note: 'nullable']
-  type notification_type [not null]
-  channel notification_channel [not null, default: 'SYSTEM']
-  message text [not null]
-  is_read boolean [not null, default: false]
-  sent_at timestamp [default: `now()`]
+  id               varchar             [primary key, note: 'UUID v4']
+  user_id          varchar             [not null]
+  extinguisher_id  varchar             [null]
+  type             notification_type   [not null]
+  channel          notification_channel [not null, default: 'SYSTEM']
+  message          text                [not null]
+  is_read          boolean             [not null, default: false]
+  sent_at          timestamp           [default: `now()`]
 }
 
-// Relationships
+// ── Relationships ──────────────────────────────────────────────────────────────
+
+// Extinguisher ownership (USER role)
+Ref: fire_extinguishers.owner_id > users.id [delete: set null]
+
+// Inspection references
 Ref: inspections.extinguisher_id > fire_extinguishers.id [delete: cascade]
 Ref: inspections.scheduled_by_id > users.id
-Ref: inspections.inspector_id > users.id
+Ref: inspections.inspector_id    > users.id
 
+// Maintenance log references
 Ref: maintenance_logs.extinguisher_id > fire_extinguishers.id [delete: cascade]
-Ref: maintenance_logs.inspector_id > users.id
-Ref: maintenance_logs.inspection_id > inspections.id
+Ref: maintenance_logs.inspector_id    > users.id
+Ref: maintenance_logs.inspection_id   > inspections.id
 
-Ref: notifications.user_id > users.id [delete: cascade]
-Ref: notifications.extinguisher_id > fire_extinguishers.id [delete: set null]
+// Notification references
+Ref: notifications.user_id          > users.id [delete: cascade]
+Ref: notifications.extinguisher_id  > fire_extinguishers.id [delete: set null]

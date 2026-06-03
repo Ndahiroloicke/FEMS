@@ -1,14 +1,16 @@
-%% Fire Extinguisher Management System (FEMS) — Database Model (ER Diagram)
+%% Fire Extinguisher Management System (FEMS) — Database ER Diagram (v2)
+%% Updated: ownerId on FIRE_EXTINGUISHER, PENDING/APPROVED inspection statuses.
 %% Paste into https://mermaid.live or any Mermaid renderer.
 
 erDiagram
+  USER ||--o{ FIRE_EXTINGUISHER : "owns (ownerId)"
   USER ||--o{ INSPECTION : "schedules (scheduledBy)"
-  USER ||--o{ INSPECTION : "assigned (inspector)"
+  USER ||--o{ INSPECTION : "assigned as inspector"
   USER ||--o{ MAINTENANCE_LOG : "logs"
   USER ||--o{ NOTIFICATION : "receives"
-  FIRE_EXTINGUISHER ||--o{ INSPECTION : "has"
-  FIRE_EXTINGUISHER ||--o{ MAINTENANCE_LOG : "has"
-  FIRE_EXTINGUISHER ||--o{ NOTIFICATION : "subject of"
+  FIRE_EXTINGUISHER ||--o{ INSPECTION : "subject of"
+  FIRE_EXTINGUISHER ||--o{ MAINTENANCE_LOG : "tracked by"
+  FIRE_EXTINGUISHER ||--o{ NOTIFICATION : "triggers"
   INSPECTION ||--o{ MAINTENANCE_LOG : "results in"
 
   USER {
@@ -16,7 +18,7 @@ erDiagram
     string   firstName
     string   lastName
     string   email UK
-    string   passwordHash
+    string   passwordHash "bcrypt"
     enum     role "ADMIN | INSPECTOR | USER"
     boolean  isActive
     string   resetToken "nullable"
@@ -30,10 +32,11 @@ erDiagram
     string   serialNumber UK
     string   location
     enum     type "WATER | CO2 | FOAM | DRY_CHEMICAL"
-    string   size
+    string   size "2.5lbs | 5lbs | 9lbs | 12lbs"
     datetime installationDate
     datetime expiryDate
     enum     status "ACTIVE | EXPIRED | NEEDS_MAINTENANCE | OUT_OF_SERVICE"
+    uuid     ownerId FK "nullable — assigned USER"
     datetime createdAt
     datetime updatedAt
   }
@@ -41,12 +44,12 @@ erDiagram
   INSPECTION {
     uuid     id PK
     uuid     extinguisherId FK
-    uuid     scheduledById FK
-    uuid     inspectorId FK "nullable"
+    uuid     scheduledById FK "user who requested"
+    uuid     inspectorId FK "nullable — assigned inspector"
     datetime scheduledAt
-    enum     status "SCHEDULED | IN_PROGRESS | COMPLETED | CANCELLED | OVERDUE"
+    enum     status "PENDING | APPROVED | SCHEDULED | IN_PROGRESS | COMPLETED | CANCELLED | OVERDUE"
     string   result "nullable"
-    string   notes "nullable"
+    string   notes "nullable — reason for request"
     datetime completedAt "nullable"
     datetime createdAt
     datetime updatedAt
@@ -57,7 +60,7 @@ erDiagram
     uuid     extinguisherId FK
     uuid     inspectorId FK
     uuid     inspectionId FK "nullable"
-    string   actionsTaken
+    string   actionsTaken "min 10 chars"
     enum     conditionNoted "GOOD | FAIR | POOR | DAMAGED | NEEDS_REPLACEMENT"
     datetime actionDate
     datetime createdAt

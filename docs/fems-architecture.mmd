@@ -1,63 +1,62 @@
-%% Fire Extinguisher Management System (FEMS) — System Architecture
-%% RESTful (monolithic NestJS API — NOT microservices), per SRS.
+%% Fire Extinguisher Management System (FEMS) — System Architecture (v2)
+%% RESTful monolithic NestJS API — NOT microservices, per SRS.
+%% Updated: ownerId scoping, PENDING/APPROVED inspection workflow, user-scoped reports/export.
 %% Paste into https://mermaid.live or any Mermaid renderer.
 
 flowchart TB
-  subgraph actors["Users / Roles"]
-    admin["Admin<br/>(manages system, users, data integrity)"]
-    inspector["Inspector<br/>(inspections, maintenance logs, scheduling)"]
-    user["User<br/>(views status, schedules inspections)"]
+  subgraph actors["Actors / Roles"]
+    admin["🔑 Admin<br/>Manages system, users, extinguisher<br/>ownership assignments, data integrity"]
+    inspector["🔍 Inspector<br/>Conducts inspections, logs maintenance,<br/>approves PENDING requests, scheduling"]
+    user["👤 User (staff / safety officer)<br/>Views own extinguishers, requests<br/>inspections, tracks status & exports"]
   end
 
-  subgraph client["Frontend — Next.js (React + Tailwind) :3000"]
-    auth_ui["Auth pages<br/>Register · Login · Forgot/Reset password"]
-    app_ui["App shell (role-aware nav)<br/>Dashboard · Extinguishers · Inspections<br/>Maintenance · Reports · Notifications · Users · Profile"]
-    apiclient["API client<br/>JWT in Authorization header"]
+  subgraph client["Frontend — Next.js 16 (React 19 + Tailwind v4)  :3000"]
+    auth_ui["Auth pages<br/>Register · Login · Forgot / Reset password<br/>2-column layout with brand panel"]
+    app_ui["Role-aware app shell<br/>Dashboard (line chart, scoped stats)<br/>Extinguishers · Inspections · Maintenance<br/>Reports · Notifications · Users · Profile"]
+    apiclient["API client (src/lib/api.ts)<br/>Bearer JWT · auto 401 redirect"]
     auth_ui --> apiclient
     app_ui --> apiclient
   end
 
-  subgraph api["Backend — NestJS RESTful API  /api  :3001"]
-    rest["REST controllers + Swagger /api/docs"]
-    subgraph sec["Cross-cutting"]
-      guard["JwtAuthGuard + RolesGuard<br/>(@Public / @Roles)"]
-      filt["Global exception filter<br/>+ logging interceptor"]
-      valid["ValidationPipe · Helmet · CORS · Throttler"]
+  subgraph api["Backend — NestJS 11 RESTful API   /api   :3001"]
+    rest["REST Controllers + Swagger UI  /api/docs"]
+    subgraph sec["Cross-cutting concerns"]
+      guard["Global JwtAuthGuard + RolesGuard<br/>(@Public · @Roles decorators)"]
+      filt["AllExceptionsFilter · LoggingInterceptor"]
+      valid["ValidationPipe (class-validator)<br/>Helmet · CORS · ThrottlerGuard"]
     end
-    mod_auth["Auth module<br/>register/login/logout<br/>forgot/reset password (JWT + bcrypt)"]
-    mod_users["Users module<br/>profile · password · admin user mgmt"]
-    mod_ext["Extinguishers module (CRUD)"]
-    mod_insp["Inspections module<br/>schedule + notify personnel"]
-    mod_maint["Maintenance module<br/>log actions / conditions"]
-    mod_rep["Reports module<br/>summary · stock · inspection status<br/>expired · maintenance history · CSV/PDF export"]
-    mod_notif["Notifications module<br/>in-app + email"]
-    cron["Scheduled job (daily)<br/>expiry → EXPIRED · reminders · overdue inspections"]
+
+    mod_auth["Auth module<br/>POST /auth/register · /auth/login · /auth/logout<br/>POST /auth/forgot-password · /auth/reset-password<br/>JWT (RS256) · bcrypt hashing"]
+    mod_users["Users module<br/>GET/PATCH /users/me (profile)<br/>POST /users/me/change-password<br/>GET/PATCH/DELETE /users/:id (admin)"]
+    mod_ext["Extinguishers module<br/>GET /extinguishers — USER sees own only (ownerId filter)<br/>POST /extinguishers — ADMIN/INSPECTOR<br/>PATCH /extinguishers/:id — ADMIN/INSPECTOR<br/>PATCH /extinguishers/:id/assign — ADMIN (set ownerId)<br/>DELETE /extinguishers/:id — ADMIN"]
+    mod_insp["Inspections module<br/>POST /inspections<br/>  → ADMIN/INSPECTOR: status=SCHEDULED<br/>  → USER: status=PENDING (request)<br/>PATCH /inspections/:id/approve — ADMIN/INSPECTOR<br/>  → promotes PENDING → SCHEDULED + notifies user<br/>GET /inspections — USER sees own requests only<br/>PATCH /inspections/:id · DELETE /inspections/:id"]
+    mod_maint["Maintenance module<br/>POST /maintenance — INSPECTOR/ADMIN<br/>GET /maintenance — USER sees own extinguishers only<br/>GET/DELETE /maintenance/:id"]
+    mod_rep["Reports module<br/>GET /reports/summary — scoped to USER's extinguishers<br/>GET /reports/stock?period=monthly — scoped for USER<br/>GET /reports/inspection-status<br/>GET /reports/expired · /reports/maintenance-history<br/>GET /reports/export?report=&format= — all roles (USER scoped)"]
+    mod_notif["Notifications module<br/>GET /notifications (user's own)<br/>PATCH /notifications/:id/read<br/>DELETE /notifications/:id<br/>In-app + SMTP email (nodemailer)"]
+    cron["Scheduled jobs (daily @midnight)<br/>Mark expired extinguishers → EXPIRED<br/>Mark overdue inspections → OVERDUE<br/>Send expiry reminder notifications"]
+
     rest --> mod_auth & mod_users & mod_ext & mod_insp & mod_maint & mod_rep & mod_notif
     rest --- sec
-    cron --> mod_ext
-    cron --> mod_notif
+    cron --> mod_ext & mod_notif
     mod_insp --> mod_notif
     mod_maint --> mod_notif
+    mod_auth --> mod_notif
   end
 
-  subgraph data["Data & integrations"]
-    prisma["Prisma ORM"]
-    pg[("PostgreSQL<br/>users · fire_extinguishers · inspections<br/>maintenance_logs · notifications")]
-    smtp["SMTP / Email (nodemailer)"]
-    files["PDF (pdfkit) · CSV exports"]
+  subgraph data["Data layer & integrations"]
+    prisma["Prisma ORM 7 (generated client)"]
+    pg[("PostgreSQL 16<br/>users · fire_extinguishers (ownerId FK)<br/>inspections · maintenance_logs · notifications")]
+    smtp["SMTP (nodemailer)<br/>transactional emails"]
+    files["PDF (pdfkit)<br/>CSV (@json2csv/plainjs)"]
     prisma --> pg
   end
 
-  admin & inspector & user -->|HTTPS| auth_ui
+  admin -->|HTTPS| auth_ui
+  inspector -->|HTTPS| auth_ui
+  user -->|HTTPS| auth_ui
   admin & inspector & user -->|HTTPS| app_ui
   apiclient -->|REST JSON + Bearer JWT| rest
 
-  mod_auth --> prisma
-  mod_users --> prisma
-  mod_ext --> prisma
-  mod_insp --> prisma
-  mod_maint --> prisma
-  mod_rep --> prisma
-  mod_notif --> prisma
+  mod_auth & mod_users & mod_ext & mod_insp & mod_maint & mod_rep & mod_notif --> prisma
   mod_notif --> smtp
   mod_rep --> files

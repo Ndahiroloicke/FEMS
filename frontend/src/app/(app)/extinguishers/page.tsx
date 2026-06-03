@@ -103,6 +103,8 @@ export default function ExtinguishersPage() {
   const [assignUserId, setAssignUserId] = useState<string>("");
   const [assigning, setAssigning] = useState(false);
   const [usersList, setUsersList] = useState<User[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [assignError, setAssignError] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -217,15 +219,26 @@ export default function ExtinguishersPage() {
   }
 
   async function openAssign(ext: FireExtinguisher) {
+    // Block assignment for broken extinguishers
+    if (ext.status === "OUT_OF_SERVICE" || ext.status === "NEEDS_MAINTENANCE") {
+      toast.error(
+        `Cannot assign a ${ext.status === "OUT_OF_SERVICE" ? "out-of-service" : "extinguisher needing maintenance"} unit. Fix it first.`
+      );
+      return;
+    }
     setAssignTarget(ext);
     setAssignUserId(ext.ownerId ?? "");
-    if (usersList.length === 0) {
-      try {
-        const res = await api.users.list({ limit: 200 });
-        setUsersList(res.data);
-      } catch {
-        /* ignore */
-      }
+    setAssignError("");
+    setUsersLoading(true);
+    try {
+      // Always fetch fresh, filter to USER role only
+      const res = await api.users.list({ limit: 200, role: "USER" });
+      setUsersList(res.data.filter((u) => u.isActive !== false));
+    } catch (err) {
+      setAssignError(err instanceof ApiError ? err.message : "Failed to load users");
+      setUsersList([]);
+    } finally {
+      setUsersLoading(false);
     }
   }
 
@@ -604,38 +617,66 @@ export default function ExtinguishersPage() {
       {/* Assign Owner modal */}
       <Modal
         open={Boolean(assignTarget)}
-        onClose={() => setAssignTarget(null)}
+        onClose={() => { setAssignTarget(null); setAssignError(""); }}
         title="Assign Extinguisher Owner"
       >
         <div className="space-y-4">
-          {assignTarget?.owner && (
+          {/* Extinguisher info */}
+          {assignTarget && (
+            <div className="rounded-lg border border-border bg-slate-50 px-4 py-3 text-sm">
+              <p className="font-medium text-slate-900">{assignTarget.serialNumber}</p>
+              <p className="text-slate-500">{assignTarget.location} · <StatusBadge status={assignTarget.status} kind="extinguisher" /></p>
+            </div>
+          )}
+
+          {/* Current owner */}
+          {assignTarget?.owner ? (
             <p className="text-sm text-slate-600">
               Currently assigned to:{" "}
               <span className="font-medium text-slate-900">
-                {assignTarget.owner.firstName} {assignTarget.owner.lastName}{" "}
-                <span className="font-normal text-slate-500">
-                  ({assignTarget.owner.email})
-                </span>
-              </span>
+                {assignTarget.owner.firstName} {assignTarget.owner.lastName}
+              </span>{" "}
+              <span className="text-slate-400">({assignTarget.owner.email})</span>
             </p>
-          )}
-          {!assignTarget?.owner && (
+          ) : (
             <p className="text-sm text-slate-400">No owner currently assigned.</p>
           )}
+
+          {/* Error loading users */}
+          {assignError && (
+            <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{assignError}</p>
+          )}
+
+          {/* User dropdown */}
           <Select
             label="Assign to user"
             value={assignUserId}
             onChange={(e) => setAssignUserId(e.target.value)}
+            disabled={usersLoading || !!assignError}
           >
-            <option value="">— Unassigned —</option>
-            {usersList.map((u) => (
-              <option key={u.id} value={u.id}>
-                {u.firstName} {u.lastName} ({u.email})
-              </option>
-            ))}
+            {usersLoading ? (
+              <option>Loading users…</option>
+            ) : (
+              <>
+                <option value="">— Unassigned —</option>
+                {usersList.length === 0 && !assignError && (
+                  <option disabled>No active users found</option>
+                )}
+                {usersList.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.firstName} {u.lastName} ({u.email})
+                  </option>
+                ))}
+              </>
+            )}
           </Select>
+
           <div className="flex gap-2">
-            <Button loading={assigning} disabled={assigning} onClick={() => handleAssign()}>
+            <Button
+              loading={assigning}
+              disabled={assigning || usersLoading || !!assignError}
+              onClick={() => handleAssign()}
+            >
               Save
             </Button>
             {assignTarget?.owner && (
@@ -649,7 +690,7 @@ export default function ExtinguishersPage() {
             )}
             <Button
               variant="secondary"
-              onClick={() => setAssignTarget(null)}
+              onClick={() => { setAssignTarget(null); setAssignError(""); }}
               disabled={assigning}
             >
               Cancel
