@@ -1,5 +1,11 @@
 # Fire Extinguisher Management System
 
+## Design Link
+
+```
+https://www.figma.com/design/pZLPQK2xmQ1184lePEbfAX/FEMS-%E2%80%94-Login---Registration-Mockup?node-id=0-1&t=AyTfTsydzdji896h-0
+```
+
 Full-stack system for tracking fire extinguisher sales, expiry dates, customer notifications, and police escalations when units are not returned.
 
 ## Stack
